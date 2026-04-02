@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(title=${pageTitle})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="section">
+  <div class="container">
+    <div th:if="${orderPlacedId != null}" class="alert alert-success">
+      Đặt hàng thành công! Mã đơn: <strong th:text="${orderPlacedId}">0</strong>
+    </div>
+    <div class="section-head">
+      <h2>Đơn hàng của tôi</h2>
+      <a class="btn btn-ghost btn-sm" th:href="@{/account/profile}">Thông tin tài khoản</a>
+    </div>
+    <div class="table-wrap" th:if="${not #lists.isEmpty(orders)}">
+      <table class="data-table">
+        <thead>
+        <tr>
+          <th>Mã</th>
+          <th>Ngày</th>
+          <th>Trạng thái</th>
+          <th>Tổng</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="o : ${orders}">
+          <td th:text="${o.id}">1</td>
+          <td th:text="${#temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm')}">Ngày</td>
+          <td><span class="badge-status" th:text="${o.status.displayName}">TT</span></td>
+          <td th:text="${#numbers.formatDecimal(o.totalAmount, 0, 'POINT', 0, 'COMMA')} + ' đ'">0</td>
+          <td><a class="btn btn-sm btn-ghost" th:href="@{'/account/orders/' + ${o.id}}">Chi tiết</a></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" th:if="${#lists.isEmpty(orders)}">Bạn chưa có đơn hàng.</p>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

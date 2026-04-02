@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title=${pageTitle})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="container admin-shell">
+  <aside th:replace="~{fragments/admin-nav :: sidebar}"></aside>
+  <section>
+    <h1 style="margin-top:0" th:text="${pageTitle}">Biểu mẫu</h1>
+    <form th:action="@{/admin/customers/save}" th:object="${customer}" method="post" class="form-card form-grid">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <input type="hidden" th:field="*{id}"/>
+      <label class="field">Email (không đổi)
+        <input type="email" th:field="*{email}" readonly style="background:#f3f0ff"/>
+      </label>
+      <label class="field">Họ tên
+        <input type="text" th:field="*{fullName}" required/>
+      </label>
+      <label class="field">Điện thoại
+        <input type="text" th:field="*{phone}"/>
+      </label>
+      <label class="field">Địa chỉ
+        <textarea th:field="*{address}"></textarea>
+      </label>
+      <button type="submit" class="btn">Lưu</button>
+      <a class="btn btn-ghost" th:href="@{/admin/customers}">Hủy</a>
+    </form>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

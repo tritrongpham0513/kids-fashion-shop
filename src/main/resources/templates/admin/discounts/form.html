@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title=${pageTitle})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="container admin-shell">
+  <aside th:replace="~{fragments/admin-nav :: sidebar}"></aside>
+  <section>
+    <h1 style="margin-top:0" th:text="${pageTitle}">Biểu mẫu</h1>
+    <form th:action="@{/admin/discounts/save}" th:object="${discount}" method="post" class="form-card form-grid">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <input type="hidden" th:field="*{id}"/>
+      <label class="field">Mã code
+        <input type="text" th:field="*{code}" required/>
+      </label>
+      <label class="field">Phần trăm giảm (0–100), để trống nếu chỉ giảm tiền
+        <input type="number" th:field="*{percentOff}" step="0.01" min="0" max="100"/>
+      </label>
+      <label class="field">Số tiền giảm cố định (đ), để trống nếu chỉ giảm %
+        <input type="number" th:field="*{fixedAmountOff}" step="0.01" min="0"/>
+      </label>
+      <label class="field">Ngày hết hạn
+        <input type="date" th:field="*{expiryDate}"/>
+      </label>
+      <label class="field">Giới hạn lượt dùng (để trống = không giới hạn)
+        <input type="number" th:field="*{maxUses}" min="1"/>
+      </label>
+      <label class="field">Số lần đã dùng
+        <input type="number" th:field="*{usedCount}" min="0"/>
+      </label>
+      <label class="field" style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" th:field="*{active}"/> Đang hoạt động
+      </label>
+      <button type="submit" class="btn">Lưu</button>
+      <a class="btn btn-ghost" th:href="@{/admin/discounts}">Hủy</a>
+    </form>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

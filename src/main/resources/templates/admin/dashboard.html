@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(title=${pageTitle})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="container admin-shell">
+  <aside th:replace="~{fragments/admin-nav :: sidebar}"></aside>
+  <section>
+    <h1 style="margin-top:0">Bảng điều khiển</h1>
+    <p class="muted">Tổng quan hệ thống bán hàng thời trang trẻ em.</p>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <h3>Sản phẩm</h3>
+        <div class="big" th:text="${countProducts}">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Đơn hàng</h3>
+        <div class="big" th:text="${countOrders}">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Khách hàng</h3>
+        <div class="big" th:text="${countCustomers}">0</div>
+      </div>
+    </div>
+    <div class="pill-row">
+      <a class="btn" th:href="@{/admin/products}">Quản lý sản phẩm</a>
+      <a class="btn btn-ghost" th:href="@{/admin/orders}">Xem đơn hàng</a>
+      <a class="btn btn-ghost" th:href="@{/admin/statistics}">Báo cáo doanh thu</a>
+    </div>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

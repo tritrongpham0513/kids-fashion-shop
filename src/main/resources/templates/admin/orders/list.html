@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title=${pageTitle})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="container admin-shell">
+  <aside th:replace="~{fragments/admin-nav :: sidebar}"></aside>
+  <section>
+    <h1 style="margin-top:0">Đơn hàng</h1>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+        <tr><th>Mã</th><th>Khách</th><th>Ngày</th><th>Trạng thái</th><th>Tổng</th><th></th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="o : ${orders}">
+          <td th:text="${o.id}">1</td>
+          <td th:text="${o.customer.fullName}">Tên</td>
+          <td th:text="${#temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm')}">N</td>
+           <td>
+             <span class="badge-status" 
+                   th:classappend="${o.status.name() == 'CHO_XAC_NHAN' ? 'badge-waiting' : (o.status.name() == 'DANG_GIAO' ? 'badge-shipping' : (o.status.name() == 'HOAN_THANH' ? 'badge-completed' : 'badge-cancelled'))}"
+                   th:text="${o.status.displayName}">S</span>
+           </td>
+           <td th:text="${#numbers.formatDecimal(o.totalAmount, 0, 'POINT', 0, 'COMMA')} + ' đ'">0</td>
+           <td style="display: flex; gap: 8px;">
+             <a class="btn btn-sm btn-ghost" th:href="@{'/admin/orders/' + ${o.id}}">Chi tiết</a>
+             
+             <!-- Quick Actions for Waiting Orders -->
+             <span th:if="${o.status.name() == 'CHO_XAC_NHAN'}" style="display: flex; gap: 8px;">
+               <form th:action="@{'/admin/orders/' + ${o.id} + '/status'}" method="post">
+                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                 <input type="hidden" name="status" value="DANG_GIAO"/>
+                 <button type="submit" class="btn btn-sm" style="background:#2e7d32; color:white; border:none;">Xác nhận</button>
+               </form>
+               <form th:action="@{'/admin/orders/' + ${o.id} + '/status'}" method="post">
+                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                 <input type="hidden" name="status" value="HUY"/>
+                 <button type="submit" class="btn btn-sm btn-outline" style="color:#d32f2f; border-color:#d32f2f;">Hủy</button>
+               </form>
+             </span>
+           </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

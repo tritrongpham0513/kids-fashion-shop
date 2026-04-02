@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title th:text="${title != null ? title + ' | KidFashion' : 'KidFashion'}">KidFashion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" th:href="@{/css/app.css}"/>
+  <script>
+    (function(){
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+</head>
+<body>
+<header th:fragment="header" class="header-wrapper">
+  <div class="header-topbar">
+    <div class="container header-topbar-inner">
+      <span>Miễn phí vận chuyển đơn hàng từ 299.000đ</span>
+      <span class="topbar-divider">|</span>
+      <span>Đổi trả dễ dàng trong 30 ngày</span>
+      <span class="topbar-divider">|</span>
+      <span>Hotline 1800 1234 - 8h-22h mỗi ngày</span>
+    </div>
+  </div>
+
+  <div class="header-main">
+    <div class="container header-main-inner">
+      <a class="brand" th:href="@{/}">
+        <img th:src="@{/images/logo.png}" alt="KidFashion Logo"/>
+        <div class="brand-text">
+          <span class="brand-title">Kid<strong>Fashion</strong></span>
+          <span class="slogan">Thời trang cho bé yêu</span>
+        </div>
+      </a>
+
+      <nav class="site-nav main-nav" id="site-nav" aria-label="Điều hướng chính">
+        <ul class="site-nav-list">
+          <li>
+            <a th:href="@{/}" th:classappend="${navActive == 'home'} ? ' is-active'">Trang chủ</a>
+          </li>
+          <li>
+            <a th:href="@{/products}" th:classappend="${navActive == 'products'} ? ' is-active'">Sản phẩm</a>
+          </li>
+          <li class="site-nav-item--dropdown">
+            <div class="nav-dropdown">
+              <a th:href="@{/categories}" class="nav-link-arrow" th:classappend="${navActive == 'categories'} ? ' is-active'">
+                Danh mục
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </a>
+              <div class="nav-dropdown-content" th:if="${navCategories != null and !#lists.isEmpty(navCategories)}">
+                <th:block th:each="cat : ${navCategories}">
+                  <a th:if="${cat != null && cat.id != null}" th:href="@{/categories/{id}(id=${cat.id})}" th:text="${cat.name != null ? cat.name : 'Danh mục'}">Category</a>
+                </th:block>
+              </div>
+            </div>
+          </li>
+          <li>
+            <a th:href="@{/products/new}" th:classappend="${navActive == 'new'} ? ' is-active'">
+              Mới về
+              <span class="nav-badge nav-badge--new">NEW</span>
+            </a>
+          </li>
+          <li>
+            <a th:href="@{/products/hot}" class="nav-hot" th:classappend="${navActive == 'hot'} ? ' is-active'">
+              Bán chạy
+              <span class="nav-badge nav-badge--hot">HOT</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="header-tools">
+        <form class="search-form" th:action="@{/search}" method="get" role="search">
+          <span class="search-form-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="20" y1="20" x2="16.35" y2="16.35"></line></svg>
+          </span>
+          <input type="search" name="q" placeholder="Tìm áo, quần, phụ kiện..." autocomplete="off" enterkeyhint="search"
+                 th:classappend="${navActive == 'search'} ? ' is-active'"/>
+          <button type="submit" class="search-form-submit" aria-label="Tìm kiếm">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="20" y1="20" x2="16.35" y2="16.35"></line></svg>
+          </button>
+        </form>
+
+        <a class="icon-link" th:href="@{/cart}" aria-label="Giỏ hàng" th:classappend="${navActive == 'cart'} ? ' is-active'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+        </a>
+
+        <span sec:authorize="isAnonymous()" class="header-auth">
+          <a class="btn-nav btn-nav-ghost" th:href="@{/register}">Đăng ký</a>
+          <a class="btn-nav btn-nav-login" th:href="@{/login}">Đăng nhập</a>
+        </span>
+
+        <span sec:authorize="isAuthenticated()">
+          <div class="nav-dropdown">
+            <div class="icon-link account-link" role="button" tabindex="0" aria-haspopup="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span class="account-text">
+                <span class="account-label">Tài khoản</span>
+                <span class="account-sub" sec:authorize="hasRole('ADMIN')">Admin</span>
+                <span class="account-sub" sec:authorize="hasRole('CUSTOMER')">Của tôi</span>
+              </span>
+            </div>
+            <div class="nav-dropdown-content nav-dropdown-right">
+              <a sec:authorize="hasRole('CUSTOMER') or hasRole('ADMIN')" th:href="@{/account/profile}">Thông tin tài khoản</a>
+              <a sec:authorize="hasRole('CUSTOMER') or hasRole('ADMIN')" th:href="@{/account/change-password}">Đổi mật khẩu</a>
+              <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}">Trang quản trị</a>
+              <a sec:authorize="hasRole('CUSTOMER')" th:href="@{/account/orders}">Đơn hàng của tôi</a>
+              <form th:action="@{/logout}" method="post" style="display: contents;">
+                <button type="submit" class="nav-logout">Đăng xuất</button>
+              </form>
+            </div>
+          </div>
+        </span>
+
+        <button type="button" class="icon-link theme-toggle-header" id="theme-toggle" title="Giao diện sáng / tối" aria-label="Chuyển giao diện sáng hoặc tối">
+          <span class="theme-icon-container theme-icon-container--header">
+            <svg id="theme-toggle-light-icon" style="display:none;" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <svg id="theme-toggle-dark-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          </span>
+        </button>
+      </div>
+
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-controls="site-nav" aria-expanded="false" aria-label="Mở menu">
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+    </div>
+  </div>
+
+  <nav class="header-categories" aria-label="Danh mục nhanh">
+    <div class="container header-categories-inner">
+      <th:block th:each="cat : ${navCategories}">
+        <a th:if="${cat != null && cat.id != null}"
+           th:href="@{/categories/{id}(id=${cat.id})}"
+           th:text="${cat.name != null ? cat.name : 'Danh mục'}"
+           th:classappend="${activeCategoryId != null and activeCategoryId == cat.id} ? ' is-active'">Danh mục</a>
+      </th:block>
+      <a th:href="@{/products/new}" class="categories-highlight">
+        <svg class="categories-highlight-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+        Hàng mới về mỗi tuần
+      </a>
+    </div>
+  </nav>
+
+  <script>
+    (function () {
+      var toggle = document.getElementById('nav-toggle');
+      var nav = document.getElementById('site-nav');
+      var inner = document.querySelector('.header-main-inner');
+      if (!toggle || !nav || !inner) return;
+      toggle.addEventListener('click', function () {
+        var open = inner.classList.toggle('nav-open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        toggle.setAttribute('aria-label', open ? 'Đóng menu' : 'Mở menu');
+      });
+      nav.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () {
+          inner.classList.remove('nav-open');
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.setAttribute('aria-label', 'Mở menu');
+        });
+      });
+    })();
+  </script>
+</header>
+
+<footer th:fragment="footer" class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <h4>KidFashion</h4>
+        <p>Thương hiệu thời trang trẻ em cao cấp, an toàn và thân thiện.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Liên kết nhanh</h4>
+        <a th:href="@{/}">Trang chủ</a>
+        <a th:href="@{/products}">Sản phẩm</a>
+      </div>
+      <div class="footer-col">
+        <h4>Hỗ trợ khách hàng</h4>
+        <a href="#">Hướng dẫn mua hàng</a>
+        <a href="#">Chính sách đổi trả</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KidFashion. Bản quyền thuộc về KidFashion.</span>
+      <div style="display: flex; gap: 16px;">
+        <a href="#">Facebook</a>
+        <a href="#">Instagram</a>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const themeToggle = document.getElementById('theme-toggle');
+      if (!themeToggle) return;
+      const darkIcon = document.getElementById('theme-toggle-dark-icon');
+      const lightIcon = document.getElementById('theme-toggle-light-icon');
+      function updateIcons() {
+        if (document.documentElement.getAttribute('data-theme') === 'dark') {
+          darkIcon.style.display = 'none';
+          lightIcon.style.display = 'block';
+        } else {
+          darkIcon.style.display = 'block';
+          lightIcon.style.display = 'none';
+        }
+      }
+      updateIcons();
+      themeToggle.addEventListener('click', () => {
+        let currentTheme = document.documentElement.getAttribute('data-theme');
+        let targetTheme = "light";
+        if (currentTheme === "light" || !currentTheme) targetTheme = "dark";
+        document.documentElement.setAttribute('data-theme', targetTheme);
+        localStorage.setItem('theme', targetTheme);
+        updateIcons();
+      });
+    });
+  </script>
+</footer>
+</body>
+</html>

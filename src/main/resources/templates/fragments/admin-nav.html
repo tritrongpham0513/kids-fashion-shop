@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<aside th:fragment="sidebar" class="admin-nav">
+  <strong style="display:block;margin-bottom:10px;padding:0 8px">Quản trị</strong>
+  <a th:href="@{/admin}">Tổng quan</a>
+  <a th:href="@{/admin/categories}">Danh mục</a>
+  <a th:href="@{/admin/products}">Sản phẩm</a>
+  <a th:href="@{/admin/discounts}">Mã giảm giá</a>
+  <a th:href="@{/admin/customers}">Khách hàng</a>
+  <a th:href="@{/admin/orders}">Đơn hàng</a>
+  <a th:href="@{/admin/statistics}">Thống kê</a>
+  <a th:href="@{/}" style="margin-top:12px">Về cửa hàng</a>
+</aside>
+</body>
+</html>

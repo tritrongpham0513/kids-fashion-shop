@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title=${pageTitle})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="container admin-shell">
+  <aside th:replace="~{fragments/admin-nav :: sidebar}"></aside>
+  <section>
+    <h1 style="margin-top:0">Thống kê 6 tháng gần nhất</h1>
+    <p class="muted">Doanh thu và số đơn theo tháng (theo dữ liệu đã ghi nhận trong hệ thống).</p>
+
+    <div class="form-card" style="max-width:900px;margin-bottom:18px">
+      <h3 style="margin-top:0">Doanh thu</h3>
+      <div class="chart-bars">
+        <div class="chart-row" th:each="row : ${chartRows}">
+          <span th:text="${row.label}">1/2026</span>
+          <div class="bar">
+            <span th:style="|width: ${row.barPercent}%|"></span>
+          </div>
+          <strong th:text="${#numbers.formatDecimal(row.amount, 0, 'POINT', 0, 'COMMA')} + ' đ'">0</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card" style="max-width:900px">
+      <h3 style="margin-top:0">Số đơn</h3>
+      <div class="chart-bars">
+        <div class="chart-row" th:each="row : ${chartRows}">
+          <span th:text="${row.label}">1/2026</span>
+          <div class="bar">
+            <span th:style="|width: ${row.orderBarPercent}%|"></span>
+          </div>
+          <strong th:text="${row.count}">0</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

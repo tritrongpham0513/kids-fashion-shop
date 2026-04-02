@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(title=${product.name})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="section">
+  <div class="container">
+    <div class="breadcrumb">
+      <a th:href="@{/}">Trang chủ</a> <span>/</span> <a th:href="@{/categories/{id}(id=${product.category.id})}" th:text="${product.category.name}">Danh mục</a> <span>/</span> <span th:text="${product.name}">Sản phẩm</span>
+    </div>
+
+    <div class="product-detail-layout">
+      <!-- Cột Trái: Gallery -->
+      <div class="product-gallery">
+        <div class="main-image">
+          <img th:src="${product.imageUrl}" th:alt="${product.name}" id="main-img"/>
+        </div>
+        <div class="thumbnail-list">
+          <div class="thumb-item active"><img th:src="${product.imageUrl}" onclick="document.getElementById('main-img').src=this.src"/></div>
+          <!-- Mock thumbnails -->
+          <div class="thumb-item"><img th:src="${product.imageUrl}" style="filter: hue-rotate(90deg);" onclick="document.getElementById('main-img').src=this.src"/></div>
+          <div class="thumb-item"><img th:src="${product.imageUrl}" style="filter: saturate(0.5);" onclick="document.getElementById('main-img').src=this.src"/></div>
+          <div class="thumb-item"><img th:src="${product.imageUrl}" style="filter: brightness(0.8);" onclick="document.getElementById('main-img').src=this.src"/></div>
+        </div>
+
+        <!-- Đánh giá sản phẩm nằm bên trái dưới thumbnails -->
+        <section id="reviews" style="padding: 32px 16px; border-top: 1px solid var(--border); margin-top: 24px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+            <h2 style="margin:0; font-size: 1.25rem;">Đánh giá sản phẩm</h2>
+            <div th:if="${reviewCount > 0}" style="font-size: 0.85rem; color: var(--muted);">
+               <strong th:text="${#numbers.formatDecimal(reviewAvg, 1, 1)}">4.5</strong>/5 
+               (<span th:text="${reviewCount}">0</span>)
+            </div>
+          </div>
+    
+          <div th:if="${productReviews != null and !#lists.isEmpty(productReviews)}" style="display: flex; flex-direction: column;">
+            <div th:each="r : ${productReviews}" class="review-item">
+              <div class="review-user-info">
+                <div class="review-avatar" th:text="${r.user != null ? #strings.substring(r.user.fullName, 0, 1) : 'K'}">U</div>
+                <div class="review-details">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h4 class="review-user-name" th:text="${r.user != null ? r.user.fullName : 'Khách'}">Tên</h4>
+                    <div class="review-stars-inline" th:attr="data-rating=${r.rating}">
+                      <svg class="review-star-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                      <svg class="review-star-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                      <svg class="review-star-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                      <svg class="review-star-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                      <svg class="review-star-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    </div>
+                  </div>
+                  <div class="review-date">Đã mua tại cửa hàng</div>
+                </div>
+              </div>
+              <p th:if="${r.comment != null}" th:text="${r.comment}" class="review-content">Nội dung</p>
+            </div>
+          </div>
+          <p th:if="${productReviews == null or #lists.isEmpty(productReviews)}" class="muted" style="text-align: center; padding: 20px 0;">Chưa có đánh giá cho sản phẩm này.</p>
+        </section>
+      </div>
+      
+      <!-- Cột Phải: Thông tin chi tiết -->
+      <div class="product-info">
+        <div class="breadcrumb" style="margin-bottom: 8px;">
+          <a th:href="@{/}">Trang chủ</a> <span>/</span> 
+          <a th:href="@{/categories/{id}(id=${product.category.id})}" th:text="${product.category.name}">Danh mục</a>
+        </div>
+        
+        <h1 th:text="${product.name}" style="font-family: inherit; font-weight: 700; font-size: 2.4rem;">Tên sản phẩm</h1>
+        
+        <div class="product-price">
+          <span class="current-price" th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</span>
+          <span class="original-price" th:text="${#numbers.formatDecimal(product.price.multiply(T(java.math.BigDecimal).valueOf(1.2)), 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</span>
+          <span class="discount-badge">-20%</span>
+        </div>
+
+        <!-- MOCK: Color Selection -->
+        <div class="attribute-section">
+          <div class="attribute-label">Màu sắc: <span class="val" id="selected-color">Sage Green</span></div>
+          <div class="color-swatch-list">
+            <div class="color-swatch active" style="background: #5b6d5b;" onclick="selectColor(this, 'Sage Green')"></div>
+            <div class="color-swatch" style="background: #d2b48c;" onclick="selectColor(this, 'Sand')"></div>
+            <div class="color-swatch" style="background: #a0522d;" onclick="selectColor(this, 'Terracotta')"></div>
+            <div class="color-swatch" style="background: #ffffff;" onclick="selectColor(this, 'White')"></div>
+          </div>
+        </div>
+
+        <!-- MOCK: Size Selection -->
+        <div class="attribute-section">
+          <div class="attribute-label">
+            Kích cỡ
+            <a href="#" class="link">Hướng dẫn chọn size</a>
+          </div>
+          <div class="size-pill-list">
+            <div class="size-pill" onclick="selectSize(this)">6-12M</div>
+            <div class="size-pill active" onclick="selectSize(this)">1-2Y</div>
+            <div class="size-pill" onclick="selectSize(this)">2-3Y</div>
+            <div class="size-pill" onclick="selectSize(this)">3-4Y</div>
+          </div>
+        </div>
+        
+        <form th:action="@{/cart/add}" method="post">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <input type="hidden" name="productId" th:value="${product.id}"/>
+          
+          <div class="attribute-section" style="margin-top: 32px;">
+            <label class="qty-label">Số lượng</label>
+            <div class="qty-selector">
+              <button type="button" class="qty-btn" onclick="let i = document.getElementById('qty'); if(i.value>1) i.value--;">-</button>
+              <input type="number" id="qty" class="qty-input" name="quantity" value="1" min="1" th:attr="max=${product.stockQuantity}"/>
+              <button type="button" class="qty-btn" th:attr="onclick='let i = document.getElementById(\'qty\'); if(i.value<'+${product.stockQuantity}+') i.value++;'">+</button>
+            </div>
+          </div>
+          
+          <div class="action-btns">
+            <button type="submit" class="btn-cart" style="margin-top: 0;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+              Thêm vào giỏ hàng
+            </button>
+            <button type="submit" th:formaction="@{/cart/buy-now}" class="btn-buy">Mua ngay</button>
+          </div>
+        </form>
+
+        <div class="trust-badge-grid">
+          <div class="trust-badge-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3L4 9v12h16V9l-8-6z"></path><path d="M12 3v18"></path></svg>
+            <span>100% Organic</span>
+          </div>
+          <div class="trust-badge-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+            <span>Giao hàng nhanh</span>
+          </div>
+          <div class="trust-badge-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+            <span>Đổi trả 30 ngày</span>
+          </div>
+        </div>
+
+        <div class="accordion">
+          <div class="accordion-item">
+            <button class="accordion-header active" onclick="toggleAcc(this)">
+              <span class="label-with-icon">
+                <svg class="icon-main" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                Chi tiết sản phẩm
+              </span>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="accordion-content open">
+              <p th:text="${product.description}" style="margin:0;">Mô tả chi tiết của sản phẩm...</p>
+              <ul class="styled-list">
+                <li>Vải Linen đã qua xử lý mềm mại, không gây ngứa</li>
+                <li>Nút gỗ tự nhiên thân thiện với môi trường</li>
+                <li>Dáng váy xòe nhẹ thoải mái cho bé vận động</li>
+                <li>Sản xuất thủ công tại Việt Nam</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="accordion-item">
+            <button class="accordion-header" onclick="toggleAcc(this)">
+              <span class="label-with-icon">
+                <svg class="icon-main" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
+                Hướng dẫn bảo quản
+              </span>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="accordion-content">
+              <ul class="styled-list">
+                <li>Giặt máy ở chế độ nhẹ, nhiệt độ thấp</li>
+                <li>Không sử dụng hóa chất tẩy rửa mạnh</li>
+                <li>Phơi mặt trái áo ở nơi râm mát để giữ màu bền lâu</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <button class="accordion-header" onclick="toggleAcc(this)" type="button">
+              <span class="label-with-icon">
+                <svg class="icon-main" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path></svg>
+                Đánh giá khách hàng
+              </span>
+              <span style="color: #fbbf24; margin-left: auto; margin-right: 8px;" th:if="${reviewCount > 0}" th:text="'★ ' + ${#numbers.formatDecimal(reviewAvg, 1, 1)} + '/5'">★ 5/5</span>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <div class="accordion-content">
+              <div th:if="${reviewError}" class="alert alert-error">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <span th:text="${reviewError}">Lỗi</span>
+              </div>
+              <div th:if="${reviewSuccess}" class="alert alert-success">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <span th:text="${reviewSuccess}">Thành công</span>
+              </div>
+
+              <form sec:authorize="hasRole('CUSTOMER')" th:action="@{/products/{productId}/reviews(productId=${product.id})}" method="post" class="form-card">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <h3 style="margin: 0 0 24px; font-size: 1.1rem; font-weight: 700;">Gửi đánh giá của bạn</h3>
+
+                <div class="field">
+                  <span class="field-label">Điểm đánh giá</span>
+                  <div class="star-rating" data-rating-for="rating-input">
+                    <input id="rating-input" type="number" name="rating" min="1" max="5" value="5" required class="star-rating-input"/>
+                    <div class="star-rating-wrapper">
+                      <div class="star-rating-stars" role="radiogroup" aria-label="Chọn điểm (1 đến 5)">
+                        <button type="button" class="star-rating-star" data-value="1" aria-label="1 sao">
+                          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                        </button>
+                        <button type="button" class="star-rating-star" data-value="2" aria-label="2 sao">
+                          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                        </button>
+                        <button type="button" class="star-rating-star" data-value="3" aria-label="3 sao">
+                          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                        </button>
+                        <button type="button" class="star-rating-star" data-value="4" aria-label="4 sao">
+                          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                        </button>
+                        <button type="button" class="star-rating-star" data-value="5" aria-label="5 sao">
+                          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                        </button>
+                      </div>
+                      <span class="star-rating-text" id="rating-text">Tuyệt vời</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <span class="field-label">Nhận xét của bạn</span>
+                  <textarea name="comment" rows="4" placeholder="Chia sẻ thêm cảm nhận của bạn về sản phẩm này..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit-review">Gửi đánh giá ngay</button>
+              </form>
+
+              <p sec:authorize="isAnonymous()" class="muted">Đăng nhập tài khoản khách hàng để đánh giá sản phẩm.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Related Products -->
+    <section class="section" style="padding: 80px 0 0;">
+      <div class="section-head">
+        <div style="display: flex; flex-direction: column;">
+          <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 4px;">Bộ sưu tập mới</span>
+          <h2 style="border: none; padding: 0;">Sản phẩm tương tự</h2>
+        </div>
+        <a th:href="@{/products}" class="muted" style="display: flex; align-items: center; gap: 8px;">
+          Xem tất cả 
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </a>
+      </div>
+      <div class="grid-products">
+        <article class="card-product" th:each="p, iter : ${bestSellingProducts}" th:if="${iter.index < 4}">
+          <div class="card-product-img-wrap">
+            <a th:href="@{/products/{id}(id=${p.id})}">
+              <img th:src="${p.imageUrl}" th:alt="${p.name}"/>
+            </a>
+          </div>
+          <div class="card-body">
+            <a th:href="@{/products/{id}(id=${p.id})}"><strong th:text="${p.name}">Tên</strong></a>
+            <div class="price" th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script>
+  function toggleAcc(el) {
+    el.classList.toggle('active');
+    let content = el.nextElementSibling;
+    if (content.classList.contains('open')) {
+      content.classList.remove('open');
+      content.style.maxHeight = '0px';
+      content.style.paddingBottom = '0px';
+    } else {
+      content.classList.add('open');
+      content.style.maxHeight = '500px'; 
+      content.style.paddingBottom = '24px';
+    }
+  }
+
+  function selectColor(el, name) {
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('selected-color').innerText = name;
+  }
+
+  function selectSize(el) {
+    document.querySelectorAll('.size-pill').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function initStarRating(container) {
+    const input = container.querySelector('input.star-rating-input');
+    const stars = Array.from(container.querySelectorAll('button.star-rating-star'));
+    const textLabel = container.querySelector('.star-rating-text');
+    if (!input || stars.length === 0) return;
+
+    const labels = {
+      1: 'Rất tệ',
+      2: 'Tệ',
+      3: 'Bình thường',
+      4: 'Tốt',
+      5: 'Tuyệt vời'
+    };
+
+    let currentValue = parseInt(input.value || '0', 10);
+    if (!Number.isFinite(currentValue) || currentValue < 1) currentValue = 5;
+
+    const setActive = (value) => {
+      stars.forEach((btn) => {
+        const v = parseInt(btn.dataset.value || '0', 10);
+        if (v <= value) btn.classList.add('is-active');
+        else btn.classList.remove('is-active');
+      });
+      if (textLabel) textLabel.innerText = labels[value] || '';
+    };
+
+    setActive(currentValue);
+
+    stars.forEach((btn) => {
+      const v = parseInt(btn.dataset.value || '0', 10);
+
+      btn.addEventListener('mouseenter', () => setActive(v));
+      btn.addEventListener('mouseleave', () => setActive(currentValue));
+
+      btn.addEventListener('click', () => {
+        currentValue = v;
+        input.value = String(currentValue);
+        setActive(currentValue);
+      });
+    });
+  }
+
+  function syncReviewStars(container) {
+    const rating = parseInt(container.getAttribute('data-rating') || '0', 10);
+    const icons = Array.from(container.querySelectorAll('.review-star-icon'));
+    if (icons.length === 0) return;
+    icons.forEach((icon, idx) => {
+      const v = idx + 1;
+      if (v <= rating) icon.classList.add('is-active');
+      else icon.classList.remove('is-active');
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.star-rating').forEach(initStarRating);
+    document.querySelectorAll('.review-stars-inline').forEach(syncReviewStars);
+  });
+</script>
+
+</body>
+</html>

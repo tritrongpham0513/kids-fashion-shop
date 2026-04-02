@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(title=${pageTitle})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2 th:text="${'Đơn hàng #' + order.id}">Đơn</h2>
+      <a class="btn btn-ghost btn-sm" th:href="@{/account/orders}">Trở lại</a>
+    </div>
+    <div class="order-detail-card">
+      <div class="order-info-header">
+        <div class="order-info-item">
+          <span class="order-info-label">Mã đơn hàng</span>
+          <span class="order-info-value" th:text="${'#' + order.id}">#0</span>
+        </div>
+        <div class="order-info-item">
+          <span class="order-info-label">Ngày đặt hàng</span>
+          <span class="order-info-value" th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</span>
+        </div>
+        <div class="order-info-item">
+          <span class="order-info-label">Trạng thái</span>
+          <span class="badge-status" 
+                th:classappend="${'badge-status--' + #strings.toLowerCase(order.status)}"
+                th:text="${order.status.displayName}">CHỜ XÁC NHẬN</span>
+        </div>
+        <div class="order-info-item" th:if="${order.discountCodeText != null}">
+          <span class="order-info-label">Mã giảm giá</span>
+          <span class="order-info-value" th:text="${order.discountCodeText}">FREESHIP</span>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="order-table-boutique">
+          <thead>
+          <tr>
+            <th>Sản phẩm</th>
+            <th style="text-align: center;">Số lượng</th>
+            <th style="text-align: right;">Đơn giá</th>
+            <th style="text-align: right;">Tạm tính</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:each="line : ${order.lines}">
+            <td>
+              <div style="font-weight: 600; color: var(--text);" th:text="${line.product.name}">Tên sản phẩm</div>
+              <div style="font-size: 0.8rem; color: var(--muted); margin-top: 4px;">Phân loại: Mặc định</div>
+            </td>
+            <td style="text-align: center;" th:text="${line.quantity}">1</td>
+            <td style="text-align: right;" th:text="${#numbers.formatDecimal(line.unitPrice, 0, 'POINT', 0, 'COMMA')} + ' đ'">0</td>
+            <td style="text-align: right; font-weight: 600;" th:text="${#numbers.formatDecimal(line.lineTotal, 0, 'POINT', 0, 'COMMA')} + ' đ'">0</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="order-summary-boutique">
+        <div class="summary-line">
+          <span class="summary-label">Tạm tính:</span>
+          <span class="summary-value" th:text="${#numbers.formatDecimal(order.subtotal, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</span>
+        </div>
+        <div class="summary-line">
+          <span class="summary-label">Giảm giá:</span>
+          <span class="summary-value" style="color: #2b8a3e;" th:text="'-' + ${#numbers.formatDecimal(order.discountAmount, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</span>
+        </div>
+        <div class="summary-line summary-total">
+          <span class="summary-label">Tổng thanh toán:</span>
+          <span class="summary-value" th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(title=${pageTitle})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>Kết quả tìm kiếm</h2>
+      <span class="muted" th:if="${keyword != null}">Từ khóa: <span th:text="${keyword}"></span></span>
+      <span class="muted" th:if="${keyword == null}">Nhập từ khóa ở thanh tìm kiếm</span>
+    </div>
+    <div class="grid-products" th:if="${not #lists.isEmpty(products)}">
+      <article class="card-product" th:each="p : ${products}">
+        <a class="card-product-img-wrap" th:href="@{/products/{id}(id=${p.id})}"><img th:src="${p.imageUrl}" th:alt="${p.name}"/></a>
+        <div class="card-body">
+          <a th:href="@{/products/{id}(id=${p.id})}"><strong th:text="${p.name}">Tên</strong></a>
+          <div class="price"
+               th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</div>
+          <form th:action="@{/cart/add}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <input type="hidden" name="productId" th:value="${p.id}"/>
+            <input type="hidden" name="quantity" value="1"/>
+            <button type="submit" class="btn btn-sm" style="width:100%">Thêm vào giỏ</button>
+          </form>
+        </div>
+      </article>
+    </div>
+    <p class="muted" th:if="${#lists.isEmpty(products)}">Không tìm thấy sản phẩm phù hợp.</p>
+
+    <!-- Pagination -->
+    <div class="pagination" th:if="${totalPages != null and totalPages > 1}">
+      <a th:href="@{/search(q=${keyword ?: ''}, page=${currentPage - 1})}" th:if="${currentPage > 1}">&laquo; Trước</a>
+      <a th:href="@{/search(q=${keyword ?: ''}, page=${i})}" th:each="i : ${#numbers.sequence(1, totalPages)}" th:text="${i}" th:classappend="${currentPage == i ? 'active' : ''}"></a>
+      <a th:href="@{/search(q=${keyword ?: ''}, page=${currentPage + 1})}" th:if="${currentPage < totalPages}">Sau &raquo;</a>
+    </div>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

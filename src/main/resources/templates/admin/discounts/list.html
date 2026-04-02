@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title=${pageTitle})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="container admin-shell">
+  <aside th:replace="~{fragments/admin-nav :: sidebar}"></aside>
+  <section>
+    <div class="section-head">
+      <h1 style="margin:0">Mã giảm giá</h1>
+      <a class="btn btn-sm" th:href="@{/admin/discounts/new}">Thêm</a>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+        <tr>
+          <th>Mã</th>
+          <th>% Giảm</th>
+          <th>Giảm cố định</th>
+          <th>Hạn</th>
+          <th>Hoạt động</th>
+          <th>Đã dùng</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="d : ${codes}">
+          <td th:text="${d.code}">CODE</td>
+          <td th:text="${d.percentOff != null} ? ${#numbers.formatDecimal(d.percentOff,0,'POINT',2,'COMMA')} + '%' : '-'">-</td>
+          <td th:text="${d.fixedAmountOff != null} ? ${#numbers.formatDecimal(d.fixedAmountOff,0,'POINT',0,'COMMA')} + ' đ' : '-'">-</td>
+          <td th:text="${d.expiryDate != null} ? ${#temporals.format(d.expiryDate, 'dd/MM/yyyy')} : '-'">-</td>
+          <td th:text="${d.active} ? 'Có' : 'Không'">C</td>
+          <td th:text="${d.usedCount} + (${d.maxUses != null} ? ' / ' + ${d.maxUses} : '')">0</td>
+          <td class="pill-row">
+            <a class="btn btn-sm btn-ghost" th:href="@{'/admin/discounts/' + ${d.id} + '/edit'}">Sửa</a>
+            <form th:action="@{'/admin/discounts/' + ${d.id} + '/delete'}" method="post" style="display:inline">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Xóa mã này?');">Xóa</button>
+            </form>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

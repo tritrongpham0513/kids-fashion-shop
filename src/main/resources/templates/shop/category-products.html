@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(title=${pageTitle})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <h2 th:text="${category.name}">Danh mục</h2>
+        <p class="muted" th:text="${category.description}">Mô tả</p>
+      </div>
+      <a class="btn btn-ghost" th:href="@{/categories}">Trở lại</a>
+    </div>
+    <div class="grid-products" th:if="${not #lists.isEmpty(products)}">
+      <article class="card-product" th:each="p : ${products}">
+        <div class="card-product-img-wrap">
+          <span class="tag-overlay" th:if="${p.newArrival}">Mới</span>
+          <span class="tag-overlay hot" th:if="${p.bestSeller}">Hot</span>
+          <a th:href="@{/products/{id}(id=${p.id})}" style="display:block; width:100%; height:100%;">
+            <img th:src="${p.imageUrl}" th:alt="${p.name}"/>
+          </a>
+          <div class="card-actions">
+            <form th:action="@{/cart/add}" method="post" style="width:100%">
+              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+              <input type="hidden" name="productId" th:value="${p.id}"/>
+              <input type="hidden" name="quantity" value="1"/>
+              <button type="submit" class="btn">Thêm vào giỏ</button>
+            </form>
+          </div>
+        </div>
+        <div class="card-body">
+          <a th:href="@{/products/{id}(id=${p.id})}"><strong th:text="${p.name}">Tên</strong></a>
+          <div class="price"
+               th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</div>
+        </div>
+      </article>
+    </div>
+    <p class="muted" th:if="${#lists.isEmpty(products)}">Chưa có sản phẩm trong danh mục này.</p>
+
+    <!-- Pagination -->
+    <div class="pagination" th:if="${totalPages != null and totalPages > 1}">
+      <a th:href="@{${requestUrl}(page=${currentPage - 1})}" th:if="${currentPage > 1}">&laquo; Trước</a>
+      <a th:href="@{${requestUrl}(page=${i})}" th:each="i : ${#numbers.sequence(1, totalPages)}" th:text="${i}" th:classappend="${currentPage == i ? 'active' : ''}"></a>
+      <a th:href="@{${requestUrl}(page=${currentPage + 1})}" th:if="${currentPage < totalPages}">Sau &raquo;</a>
+    </div>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

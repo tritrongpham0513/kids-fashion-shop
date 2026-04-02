@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title=${pageTitle})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="container admin-shell">
+  <aside th:replace="~{fragments/admin-nav :: sidebar}"></aside>
+  <section>
+    <h1 style="margin-top:0" th:text="${pageTitle}">Biểu mẫu</h1>
+    <form th:action="@{/admin/products/save}" th:object="${product}" method="post" class="form-card form-grid">
+      <input type="hidden" th:field="*{id}"/>
+      <label class="field">Tên sản phẩm
+        <input type="text" th:field="*{name}" required/>
+      </label>
+      <label class="field">Mô tả
+        <textarea th:field="*{description}"></textarea>
+      </label>
+      <label class="field">Giá (đ)
+        <input type="number" th:field="*{price}" step="0.01" min="0" required/>
+      </label>
+      <label class="field">Liên kết hình ảnh
+        <input type="text" th:field="*{imageUrl}"/>
+      </label>
+      <label class="field">Tồn kho
+        <input type="number" th:field="*{stockQuantity}" min="0" required/>
+      </label>
+      <label class="field">Danh mục
+        <select name="categoryId" required>
+          <option th:each="c : ${categories}" th:value="${c.id}" th:selected="${product.category != null and product.category.id == c.id}"
+                  th:text="${c.name}">Tên</option>
+        </select>
+      </label>
+      <label class="field" style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" th:field="*{newArrival}"/> Hàng mới về
+      </label>
+      <label class="field" style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" th:field="*{adminHot}"/> <strong>Sản phẩm HOT</strong> (admin — ưu tiên hiển thị trên danh sách HOT)
+      </label>
+      <label class="field" style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" th:field="*{bestSeller}"/> Đánh dấu nổi bật (gợi ý hiển thị)
+      </label>
+      <button type="submit" class="btn">Lưu</button>
+      <a class="btn btn-ghost" th:href="@{/admin/products}">Hủy</a>
+    </form>
+  </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

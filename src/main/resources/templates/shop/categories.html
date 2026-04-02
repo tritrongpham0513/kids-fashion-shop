@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(title=${pageTitle})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>Chọn danh mục</h2>
+    </div>
+    <div class="grid-products">
+      <article class="card-product" th:each="c : ${categories}" style="height: 100%;">
+        <div class="card-body" style="padding:32px 24px; height: 100%; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: var(--radius);">
+          <span class="tag" style="width:fit-content; margin-bottom: 8px;">Danh mục</span>
+          <h3 style="margin:0 0 8px;"><a th:href="@{/categories/{id}(id=${c.id})}" th:text="${c.name}">Tên</a></h3>
+          <p class="muted" th:text="${c.description}" style="margin:0 0 20px;">Mô tả</p>
+          <a class="btn btn-sm" th:href="@{/categories/{id}(id=${c.id})}" style="margin-top: auto; width: 100%;">Xem sản phẩm</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

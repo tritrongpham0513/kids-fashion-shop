@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(title=${pageTitle})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: header}"></header>
+
+<main>
+  <section class="hero-carousel" id="mainHero">
+    <div class="carousel-inner">
+      <!-- Dynamic Slides from Hot Products -->
+      <div th:each="p, iter : ${bestSellingProducts}"
+           th:if="${bestSellingProducts != null && p != null && iter.index < 5}"
+           class="carousel-item" 
+           th:classappend="${iter.first} ? 'active' : ''">
+        <img class="hero-bg" th:if="${p.imageUrl != null}" th:src="${p.imageUrl}" th:alt="${p.name}"/>
+        <div class="hero-overlay"></div>
+        <div class="container hero-container">
+          <div class="hero-content">
+            <span class="badge-hot">SẢN PHẨM NỔI BẬT</span>
+            <h1 th:text="${p.name != null ? p.name : 'Sản phẩm mới'}">Tên Sản Phẩm</h1>
+            <p th:text="${p.description}">Mô tả ngắn gọn về sản phẩm hot nhất mùa này.</p>
+            <div class="btn-group" th:if="${p.id != null}">
+              <a class="btn" th:href="@{/products/{id}(id=${p.id})}">Mua Ngay</a>
+              <a class="btn btn-ghost" th:href="@{/products/hot}">Xem BST Hot</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Fallback Slide if no hot products -->
+      <div th:if="${bestSellingProducts == null or #lists.isEmpty(bestSellingProducts)}" class="carousel-item active">
+        <img class="hero-bg" th:src="@{/images/hero_kids.png}" alt="Default Hero"/>
+        <div class="hero-overlay"></div>
+        <div class="container hero-container">
+          <div class="hero-content">
+            <h1>Mùa Xuân Hè <br/> Yêu Thương</h1>
+            <p>Khám phá bộ sưu tập thời trang tối giản dành cho bé yêu.</p>
+            <div class="btn-group">
+              <a class="btn" th:href="@{/categories}">Xem bộ sưu tập</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <button class="carousel-control prev" onclick="moveSlide(-1)">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <button class="carousel-control next" onclick="moveSlide(1)">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </button>
+
+    <!-- Indicators -->
+    <div class="carousel-indicators">
+      <span th:each="p, iter : ${bestSellingProducts}"
+            th:if="${bestSellingProducts != null && iter.index < 5}"
+            class="dot" 
+            th:classappend="${iter.first} ? 'active' : ''"
+            th:onclick="'currentSlide(' + ${iter.index} + ')'"></span>
+    </div>
+  </section>
+
+  <script>
+    let slideIndex = 0;
+    const slides = document.querySelectorAll('.carousel-item');
+    const dots = document.querySelectorAll('.dot');
+    let autoPlayInterval;
+
+    function showSlide(n) {
+      if (slides.length === 0) return;
+      slides.forEach(s => s.classList.remove('active'));
+      dots.forEach(d => d.classList.remove('active'));
+      
+      slideIndex = (n + slides.length) % slides.length;
+      slides[slideIndex].classList.add('active');
+      if (dots[slideIndex]) dots[slideIndex].classList.add('active');
+    }
+
+    function moveSlide(n) {
+      showSlide(slideIndex + n);
+      resetAutoPlay();
+    }
+
+    function currentSlide(n) {
+      showSlide(n);
+      resetAutoPlay();
+    }
+
+    function startAutoPlay() {
+      autoPlayInterval = setInterval(() => {
+        showSlide(slideIndex + 1);
+      }, 5000);
+    }
+
+    function resetAutoPlay() {
+      clearInterval(autoPlayInterval);
+      startAutoPlay();
+    }
+
+    if (slides.length > 1) {
+      startAutoPlay();
+    }
+  </script>
+
+  <section class="features-bar">
+    <div class="container">
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+          </div>
+          <div class="feature-text">
+            <strong>Vận chuyển miễn phí</strong>
+            <span>Từ 500k toàn quốc</span>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 2l3 9h9l-7 5 3 9-8-6-8 6 3-9-7-5h9z"></path></svg>
+          </div>
+          <div class="feature-text">
+            <strong>Tích điểm hạng thẻ</strong>
+            <span>Đổi quà sành điệu</span>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+          </div>
+          <div class="feature-text">
+            <strong>Thanh toán tiện lợi</strong>
+            <span>Ví điện tử & Thẻ</span>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          </div>
+          <div class="feature-text">
+            <strong>100% Hoàn trả</strong>
+            <span>Nếu sản phẩm lỗi</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <h2>Sản phẩm mới</h2>
+        <a class="muted" th:href="@{/products/new}">Xem tất cả</a>
+      </div>
+      <div class="grid-products" th:if="${newestProducts != null}">
+        <article class="card-product" th:each="p : ${newestProducts}" th:if="${p != null}">
+          <div class="card-product-img-wrap">
+            <span class="tag-overlay">Mới</span>
+            <a th:if="${p.id != null}" th:href="@{/products/{id}(id=${p.id})}" style="display:block; width:100%; height:100%;">
+              <img th:if="${p.imageUrl != null}" th:src="${p.imageUrl}" th:alt="${p.name}"/>
+            </a>
+            <div class="card-actions" th:if="${p.id != null}">
+              <form th:action="@{/cart/add}" method="post" style="width:100%">
+                <input type="hidden" name="productId" th:value="${p.id}"/>
+                <input type="hidden" name="quantity" value="1"/>
+                <button type="submit" class="btn">Thêm vào giỏ</button>
+              </form>
+            </div>
+          </div>
+          <div class="card-body">
+            <a th:if="${p.id != null}" th:href="@{/products/{id}(id=${p.id})}"><strong th:text="${p.name != null ? p.name : 'Sản phẩm'}">Tên</strong></a>
+            <div class="price"
+                 th:text="${(p != null && p.price != null) ? #numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA') : '0'} + ' đ'">0 đ</div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:20px;">
+    <div class="container">
+      <div class="section-head">
+        <h2>Bán chạy nhất</h2>
+        <a class="muted" th:href="@{/products/hot}">Xem tất cả</a>
+      </div>
+      <div class="grid-products" th:if="${bestSellingProducts != null}">
+        <article class="card-product" th:each="p : ${bestSellingProducts}" th:if="${p != null}">
+          <div class="card-product-img-wrap">
+            <span class="tag-overlay hot">Hot</span>
+            <a th:if="${p.id != null}" th:href="@{/products/{id}(id=${p.id})}" style="display:block; width:100%; height:100%;">
+              <img th:if="${p.imageUrl != null}" th:src="${p.imageUrl}" th:alt="${p.name}"/>
+            </a>
+            <div class="card-actions" th:if="${p.id != null}">
+              <form th:action="@{/cart/add}" method="post" style="width:100%">
+                <input type="hidden" name="productId" th:value="${p.id}"/>
+                <input type="hidden" name="quantity" value="1"/>
+                <button type="submit" class="btn">Thêm vào giỏ</button>
+              </form>
+            </div>
+          </div>
+          <div class="card-body">
+            <a th:if="${p.id != null}" th:href="@{/products/{id}(id=${p.id})}"><strong th:text="${p.name != null ? p.name : 'Sản phẩm'}">Tên</strong></a>
+            <div class="price"
+                 th:text="${(p != null && p.price != null) ? #numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA') : '0'} + ' đ'">0 đ</div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
