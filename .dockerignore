@@ -1,0 +1,16 @@
+# Không đưa các file nhạy cảm vào build context
+secrets/
+**/debug-*.log
+debug*.log
+run*.log
+curl_out.txt
+hex_check.txt
+tmp_*.txt
+verify_final.txt
+
+# Không cần thiết cho build
+target/
+.mvn/wrapper/maven-wrapper.jar
+.git/
+.github/
+
