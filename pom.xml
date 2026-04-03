@@ -71,6 +71,10 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<!-- Render/Docker đôi khi không tự dò main class -> chỉ định rõ để repackage thành công -->
+					<mainClass>com.kidfashion.ecommerce.kids_fashion_shop.KidsFashionShopApplication</mainClass>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
