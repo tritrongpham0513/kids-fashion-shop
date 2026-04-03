@@ -24,6 +24,10 @@
         <div class="cart-items-card">
           <div class="cart-line" th:each="line : ${cartLines}">
             <div class="cart-line-main">
+              <input type="checkbox"
+                     class="cart-select-checkbox"
+                     th:value="${line.lineKey}"
+                     aria-label="Chọn sản phẩm để thanh toán"/>
               <a class="cart-line-thumb" th:href="@{/products/{id}(id=${line.product.id})}">
                 <img th:src="${line.product.imageUrl}" th:alt="${line.product.name}" loading="lazy"/>
               </a>
@@ -33,11 +37,20 @@
                   Đơn giá
                   <span th:text="${#numbers.formatDecimal(line.product.price, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</span>
                 </p>
+                <p class="cart-line-variant"
+                   th:if="${(line.colorLabel != null and !#strings.isEmpty(line.colorLabel)) or (line.sizeLabel != null and !#strings.isEmpty(line.sizeLabel))}">
+                  <span th:if="${line.colorLabel != null and !#strings.isEmpty(line.colorLabel)}">Màu: <strong th:text="${line.colorLabel}">—</strong></span>
+                  <span th:if="${line.colorLabel != null and !#strings.isEmpty(line.colorLabel) and line.sizeLabel != null and !#strings.isEmpty(line.sizeLabel)}"> · </span>
+                  <span th:if="${line.sizeLabel != null and !#strings.isEmpty(line.sizeLabel)}">Size: <strong th:text="${line.sizeLabel}">—</strong></span>
+                </p>
               </div>
             </div>
             <div class="cart-line-side">
-              <form class="cart-qty-form" th:action="@{'/cart/update/' + ${line.product.id}}" method="post">
+              <form class="cart-qty-form" th:action="@{/cart/update}" method="post">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" name="productId" th:value="${line.product.id}"/>
+                <input type="hidden" name="colorLabel" th:value="${line.colorLabel != null ? line.colorLabel : ''}"/>
+                <input type="hidden" name="sizeLabel" th:value="${line.sizeLabel != null ? line.sizeLabel : ''}"/>
                 <span class="cart-qty-label">Số lượng</span>
                 <div class="cart-qty-row">
                   <input class="cart-qty-input" type="number" name="quantity"
@@ -48,10 +61,15 @@
               </form>
               <div class="cart-line-sub">
                 <span class="cart-line-sub-label">Tạm tính</span>
-                <strong class="cart-line-sub-value" th:text="${#numbers.formatDecimal(line.lineSubtotal, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</strong>
+                <strong class="cart-line-sub-value"
+                        th:attr="data-line-subtotal=${line.lineSubtotal}"
+                        th:text="${#numbers.formatDecimal(line.lineSubtotal, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</strong>
               </div>
-              <form class="cart-line-remove-form" th:action="@{'/cart/remove/' + ${line.product.id}}" method="post">
+              <form class="cart-line-remove-form" th:action="@{/cart/remove}" method="post">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" name="productId" th:value="${line.product.id}"/>
+                <input type="hidden" name="colorLabel" th:value="${line.colorLabel != null ? line.colorLabel : ''}"/>
+                <input type="hidden" name="sizeLabel" th:value="${line.sizeLabel != null ? line.sizeLabel : ''}"/>
                 <button type="submit" class="cart-remove-btn" title="Xóa khỏi giỏ" aria-label="Xóa khỏi giỏ">
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
@@ -66,7 +84,8 @@
           <h3 class="cart-summary-title">Tóm tắt đơn hàng</h3>
           <div class="cart-summary-row">
             <span>Tạm tính</span>
-            <span th:text="${#numbers.formatDecimal(cartSubtotal, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</span>
+            <span id="cart-summary-subtotal"
+                  th:text="${#numbers.formatDecimal(cartSubtotal, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</span>
           </div>
           <div class="cart-summary-row muted">
             <span>Phí vận chuyển</span>
@@ -74,14 +93,15 @@
           </div>
           <div class="cart-summary-total">
             <span>Tổng cộng</span>
-            <strong th:text="${#numbers.formatDecimal(cartSubtotal, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</strong>
+            <strong id="cart-summary-total"
+                    th:text="${#numbers.formatDecimal(cartSubtotal, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</strong>
           </div>
           <div class="cart-summary-actions">
             <span sec:authorize="isAnonymous()">
               <a class="cart-summary-primary" th:href="@{/login}">Đăng nhập để đặt hàng</a>
             </span>
             <span sec:authorize="hasRole('CUSTOMER')">
-              <a class="cart-summary-primary" th:href="@{/checkout}">Thanh toán</a>
+              <button type="button" class="cart-summary-primary" id="checkout-selected-btn">Thanh toán</button>
             </span>
             <span sec:authorize="hasRole('ADMIN')">
               <p class="muted cart-summary-note">Tài khoản quản trị không đặt hàng từ giao diện khách.</p>
@@ -102,5 +122,77 @@
   </div>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
+<form th:action="@{/cart/checkout-selected}" method="post" id="checkout-selected-form" style="display:none;">
+  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+  <div id="selected-line-keys-container"></div>
+</form>
+
+<script>
+  (function () {
+    const btn = document.getElementById('checkout-selected-btn');
+    const form = document.getElementById('checkout-selected-form');
+    const container = document.getElementById('selected-line-keys-container');
+    if (!btn || !form || !container) return;
+
+    btn.addEventListener('click', () => {
+      const selected = Array.from(document.querySelectorAll('.cart-select-checkbox:checked')).map(cb => cb.value);
+      container.innerHTML = '';
+      if (!selected || selected.length === 0) {
+        alert('Bạn cần chọn ít nhất một sản phẩm trong giỏ để thanh toán.');
+        return;
+      }
+      selected.forEach((key) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'selectedLineKeys';
+        input.value = key;
+        container.appendChild(input);
+      });
+      form.submit();
+    });
+
+    function formatVnd(amount) {
+      try {
+        return amount.toLocaleString('vi-VN') + ' đ';
+      } catch (e) {
+        return amount + ' đ';
+      }
+    }
+
+    function recalcSummary() {
+      const summarySubtotalEl = document.getElementById('cart-summary-subtotal');
+      const summaryTotalEl = document.getElementById('cart-summary-total');
+      if (!summarySubtotalEl || !summaryTotalEl) return;
+
+      const checkboxes = Array.from(document.querySelectorAll('.cart-select-checkbox'));
+      let subtotal = 0;
+      checkboxes.forEach((cb) => {
+        if (!cb.checked) return;
+        const line = cb.closest('.cart-line');
+        if (!line) return;
+        const subEl = line.querySelector('.cart-line-sub-value');
+        if (!subEl) return;
+        const raw = subEl.getAttribute('data-line-subtotal');
+        if (!raw) return;
+        const val = parseFloat(raw);
+        if (!isNaN(val)) {
+          subtotal += val;
+        }
+      });
+
+      // Nếu chưa chọn gì, hiển thị 0 đ
+      summarySubtotalEl.textContent = formatVnd(Math.max(0, Math.round(subtotal)));
+      summaryTotalEl.textContent = formatVnd(Math.max(0, Math.round(subtotal)));
+    }
+
+    // Tính lại khi load và khi tick/untick
+    recalcSummary();
+    document.addEventListener('change', (e) => {
+      if (e.target && e.target.classList.contains('cart-select-checkbox')) {
+        recalcSummary();
+      }
+    });
+  })();
+</script>
 </body>
 </html>

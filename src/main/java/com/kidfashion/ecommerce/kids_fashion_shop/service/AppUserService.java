@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AppUserService {
@@ -44,6 +45,31 @@ public class AppUserService {
 		user.setFullName(fullName);
 		user.setPhone(phone);
 		user.setAddress(address);
+		user.setRole(Role.CUSTOMER);
+		return this.appUserRepository.save(user);
+	}
+
+	@Transactional
+	public AppUser findOrCreateGoogleCustomer(String email, String fullName) {
+		if (email == null || email.isBlank()) {
+			throw new IllegalArgumentException("Email Google không hợp lệ.");
+		}
+		String normalizedEmail = email.trim().toLowerCase();
+		Optional<AppUser> existing = this.appUserRepository.findByEmailIgnoreCase(normalizedEmail);
+		if (existing.isPresent()) {
+			AppUser user = existing.get();
+			if ((user.getFullName() == null || user.getFullName().isBlank()) && fullName != null && !fullName.isBlank()) {
+				user.setFullName(fullName.trim());
+				return this.appUserRepository.save(user);
+			}
+			return user;
+		}
+
+		AppUser user = new AppUser();
+		user.setEmail(normalizedEmail);
+		user.setFullName((fullName == null || fullName.isBlank()) ? normalizedEmail : fullName.trim());
+		// Vẫn lưu password hash để tương thích cột NOT NULL và các flow hiện có.
+		user.setPassword(this.passwordEncoder.encode(UUID.randomUUID().toString()));
 		user.setRole(Role.CUSTOMER);
 		return this.appUserRepository.save(user);
 	}

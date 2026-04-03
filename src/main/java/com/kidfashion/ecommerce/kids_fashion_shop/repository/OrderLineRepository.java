@@ -19,4 +19,6 @@ public interface OrderLineRepository extends JpaRepository<OrderLine, Long> {
 	@Query(value = "select ol.product.id, sum(ol.quantity) from OrderLine ol group by ol.product.id order by sum(ol.quantity) desc",
 			countQuery = "select count(distinct ol.product.id) from OrderLine ol")
 	org.springframework.data.domain.Page<Object[]> findProductIdsByTotalQuantitySoldPaged(Pageable pageable);
+
+	boolean existsByProductId(Long productId);
 }

@@ -47,6 +47,9 @@ public class ShopOrder {
 	@Column(name = "discount_code_text", length = 60)
 	private String discountCodeText;
 
+	@Column(name = "shipping_address", nullable = false, length = 400)
+	private String shippingAddress;
+
 	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt;
 
@@ -111,6 +114,14 @@ public class ShopOrder {
 
 	public void setDiscountCodeText(String discountCodeText) {
 		this.discountCodeText = discountCodeText;
+	}
+
+	public String getShippingAddress() {
+		return this.shippingAddress;
+	}
+
+	public void setShippingAddress(String shippingAddress) {
+		this.shippingAddress = shippingAddress;
 	}
 
 	public LocalDateTime getCreatedAt() {

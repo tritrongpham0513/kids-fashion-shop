@@ -10,6 +10,12 @@
       <a class="btn btn-ghost btn-sm" th:href="@{/cart}">Trở lại giỏ hàng</a>
     </div>
     <div th:if="${checkoutError != null}" class="alert alert-error" th:text="${checkoutError}">Lỗi</div>
+    <p th:if="${checkoutBuyNowOnly}" class="muted" style="margin: -8px 0 20px; font-size: 0.92rem;">
+      Bạn đang thanh toán <strong>chỉ sản phẩm vừa chọn</strong> (Mua ngay). Các món trong giỏ hàng không nằm trong đơn này.
+    </p>
+    <p th:if="${checkoutSelectedOnly}" class="muted" style="margin: -8px 0 20px; font-size: 0.92rem;">
+      Bạn đang thanh toán <strong>chỉ các sản phẩm đã tick trong giỏ</strong>. Các món chưa chọn không nằm trong đơn này.
+    </p>
     <div class="checkout-layout">
       <!-- Left Column: Delivery & Items -->
       <div class="checkout-main">
@@ -18,9 +24,37 @@
           <div th:each="line : ${cartLines}" class="checkout-order-item">
             <div class="checkout-item-info">
               <div class="checkout-item-name" th:text="${line.product.name}">Tên sản phẩm</div>
+              <div class="checkout-item-variant"
+                   th:if="${(line.colorLabel != null and !#strings.isEmpty(line.colorLabel)) or (line.sizeLabel != null and !#strings.isEmpty(line.sizeLabel))}"
+                   style="font-size: 0.82rem; color: var(--muted); margin-top: 4px;">
+                <span th:if="${line.colorLabel != null and !#strings.isEmpty(line.colorLabel)}">Màu: <span th:text="${line.colorLabel}"></span></span>
+                <span th:if="${line.colorLabel != null and !#strings.isEmpty(line.colorLabel) and line.sizeLabel != null and !#strings.isEmpty(line.sizeLabel)}"> · </span>
+                <span th:if="${line.sizeLabel != null and !#strings.isEmpty(line.sizeLabel)}">Size: <span th:text="${line.sizeLabel}"></span></span>
+              </div>
               <div class="checkout-item-qty" th:text="${'Số lượng: ' + line.quantity}">1</div>
             </div>
             <div class="checkout-item-price" th:text="${#numbers.formatDecimal(line.lineSubtotal, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</div>
+          </div>
+        </div>
+
+        <h3 class="checkout-section-title" style="margin-top: 48px;">Địa chỉ giao hàng</h3>
+        <div class="boutique-field">
+          <span class="field-label">Chọn địa chỉ nhận hàng</span>
+          <label style="display:block;margin-bottom:8px">
+            <input type="radio" name="addressOptionVisual" value="default" checked th:disabled="${!hasDefaultAddress}"/>
+            Dùng địa chỉ mặc định trong hồ sơ
+          </label>
+          <p th:if="${hasDefaultAddress}" class="muted" style="margin:0 0 10px 24px" th:text="${defaultAddress}">Địa chỉ mặc định</p>
+          <p th:if="${!hasDefaultAddress}" class="alert alert-error" style="margin:0 0 10px 0">
+            Bạn chưa có địa chỉ mặc định, vui lòng nhập địa chỉ mới bên dưới.
+          </p>
+          <label style="display:block;margin-bottom:8px">
+            <input type="radio" name="addressOptionVisual" value="new" th:checked="${!hasDefaultAddress}"/>
+            Nhập địa chỉ giao hàng khác
+          </label>
+          <div class="boutique-input-wrap">
+            <textarea id="shipping-address-input" rows="3" maxlength="400"
+                      placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành..."></textarea>
           </div>
         </div>
 
@@ -69,6 +103,9 @@
 
           <form th:action="@{/checkout/place}" method="post" id="checkout-place-form" style="margin-top: 24px;">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <input type="hidden" name="discountCode" id="discount-code-hidden"/>
+            <input type="hidden" name="addressOption" id="address-option-hidden" value="default"/>
+            <input type="hidden" name="shippingAddressInput" id="shipping-address-hidden"/>
             <button type="submit" class="luxury-submit-btn" style="margin: 0;">Xác nhận đặt hàng</button>
           </form>
 
@@ -88,6 +125,13 @@
     var totEl = document.getElementById('checkout-total-display');
     var msgEl = document.getElementById('checkout-discount-msg');
     if (!input || !subEl || !discEl || !totEl) return;
+    var placeForm = document.getElementById('checkout-place-form');
+    var addressInput = document.getElementById('shipping-address-input');
+    var discountHidden = document.getElementById('discount-code-hidden');
+    var addressOptionHidden = document.getElementById('address-option-hidden');
+    var addressHidden = document.getElementById('shipping-address-hidden');
+    var addressOptions = document.querySelectorAll('input[name="addressOptionVisual"]');
+    var hasDefault = /*[[${hasDefaultAddress}]]*/ false;
 
     var previewUrl = /*[[@{/checkout/preview-discount}]]*/ '/checkout/preview-discount';
     var debounceMs = 320;
@@ -144,6 +188,36 @@
       clearTimeout(t);
       runPreview();
     });
+
+    function selectedAddressOption() {
+      for (var i = 0; i < addressOptions.length; i++) {
+        if (addressOptions[i].checked) return addressOptions[i].value;
+      }
+      return hasDefault ? 'default' : 'new';
+    }
+
+    function syncAddressFormData() {
+      if (!addressOptionHidden || !addressHidden) return;
+      var option = selectedAddressOption();
+      addressOptionHidden.value = option;
+      addressHidden.value = addressInput ? (addressInput.value || '').trim() : '';
+      if (discountHidden) {
+        discountHidden.value = input ? (input.value || '').trim() : '';
+      }
+    }
+
+    if (addressOptions && addressOptions.length > 0) {
+      for (var i = 0; i < addressOptions.length; i++) {
+        addressOptions[i].addEventListener('change', syncAddressFormData);
+      }
+    }
+    if (addressInput) addressInput.addEventListener('input', syncAddressFormData);
+    if (placeForm) {
+      placeForm.addEventListener('submit', function () {
+        syncAddressFormData();
+      });
+    }
+    syncAddressFormData();
     runPreview();
   })();
   /*]]>*/

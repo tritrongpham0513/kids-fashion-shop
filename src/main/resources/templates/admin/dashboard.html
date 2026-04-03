@@ -5,27 +5,57 @@
 <header th:replace="~{fragments/layout :: header}"></header>
 <main class="container admin-shell">
   <aside th:replace="~{fragments/admin-nav :: sidebar}"></aside>
-  <section>
-    <h1 style="margin-top:0">Bảng điều khiển</h1>
-    <p class="muted">Tổng quan hệ thống bán hàng thời trang trẻ em.</p>
-    <div class="stat-grid">
-      <div class="stat-card">
-        <h3>Sản phẩm</h3>
-        <div class="big" th:text="${countProducts}">0</div>
+  <section class="admin-main-panel">
+    <header class="admin-page-header">
+      <div>
+        <p class="admin-page-eyebrow">Bảng điều khiển</p>
+        <h1 class="admin-page-title">Xin chào</h1>
+        <p class="admin-page-lead muted">Tổng quan cửa hàng thời trang trẻ em — sản phẩm, đơn hàng và khách hàng.</p>
       </div>
-      <div class="stat-card">
-        <h3>Đơn hàng</h3>
-        <div class="big" th:text="${countOrders}">0</div>
-      </div>
-      <div class="stat-card">
-        <h3>Khách hàng</h3>
-        <div class="big" th:text="${countCustomers}">0</div>
-      </div>
+    </header>
+
+    <div class="admin-stat-grid">
+      <article class="admin-stat-card admin-stat-card--rose">
+        <div class="admin-stat-card__icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        </div>
+        <p class="admin-stat-card__label">Sản phẩm</p>
+        <p class="admin-stat-card__value" th:text="${countProducts}">0</p>
+      </article>
+      <article class="admin-stat-card admin-stat-card--mint">
+        <div class="admin-stat-card__icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        </div>
+        <p class="admin-stat-card__label">Đơn hàng</p>
+        <p class="admin-stat-card__value" th:text="${countOrders}">0</p>
+      </article>
+      <article class="admin-stat-card admin-stat-card--sun">
+        <div class="admin-stat-card__icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <p class="admin-stat-card__label">Khách hàng</p>
+        <p class="admin-stat-card__value" th:text="${countCustomers}">0</p>
+      </article>
     </div>
-    <div class="pill-row">
-      <a class="btn" th:href="@{/admin/products}">Quản lý sản phẩm</a>
-      <a class="btn btn-ghost" th:href="@{/admin/orders}">Xem đơn hàng</a>
-      <a class="btn btn-ghost" th:href="@{/admin/statistics}">Báo cáo doanh thu</a>
+
+    <h2 class="admin-section-title">Thao tác nhanh</h2>
+    <div class="admin-quick-grid">
+      <a th:href="@{/admin/products}" class="admin-quick-card">
+        <span class="admin-quick-card__title">Quản lý sản phẩm</span>
+        <span class="admin-quick-card__hint muted">Thêm, sửa, tồn kho</span>
+      </a>
+      <a th:href="@{/admin/orders}" class="admin-quick-card">
+        <span class="admin-quick-card__title">Đơn hàng</span>
+        <span class="admin-quick-card__hint muted">Trạng thái &amp; chi tiết</span>
+      </a>
+      <a th:href="@{/admin/statistics}" class="admin-quick-card">
+        <span class="admin-quick-card__title">Thống kê</span>
+        <span class="admin-quick-card__hint muted">Báo cáo doanh thu</span>
+      </a>
+      <a th:href="@{/admin/categories}" class="admin-quick-card">
+        <span class="admin-quick-card__title">Danh mục</span>
+        <span class="admin-quick-card__hint muted">Cấu trúc cửa hàng</span>
+      </a>
     </div>
   </section>
 </main>

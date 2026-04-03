@@ -18,6 +18,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
 	List<Product> findByCategoryIdOrderByCreatedAtDesc(Long categoryId);
 
+	long countByCategoryId(Long categoryId);
+
 	List<Product> findByNameContainingIgnoreCase(String keyword);
 
 	List<Product> findByNewArrivalTrueOrderByCreatedAtDesc(Pageable pageable);

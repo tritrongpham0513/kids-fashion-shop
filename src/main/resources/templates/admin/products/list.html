@@ -10,6 +10,8 @@
       <h1 style="margin:0">Sản phẩm</h1>
       <a class="btn btn-sm" th:href="@{/admin/products/new}">Thêm</a>
     </div>
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
     <div class="table-wrap">
       <table class="data-table">
         <thead>

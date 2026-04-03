@@ -19,6 +19,12 @@
         </label>
         <button type="submit" class="btn">Đăng nhập</button>
       </form>
+      <div th:if="${!#strings.isEmpty(@environment.getProperty('spring.security.oauth2.client.registration.google.client-id'))}"
+           style="margin:14px 0;text-align:center;color:#777">hoặc</div>
+      <a th:if="${!#strings.isEmpty(@environment.getProperty('spring.security.oauth2.client.registration.google.client-id'))}"
+         th:href="@{/oauth2/authorization/google}" class="btn btn-outline" style="display:block;text-align:center">
+        Đăng nhập bằng Gmail
+      </a>
       <p class="muted">Chưa có tài khoản? <a th:href="@{/register}">Đăng ký ngay</a></p>
       <p class="muted" style="font-size:0.9rem">Quản trị: đăng nhập bằng email admin trong file cấu hình.</p>
     </div>

@@ -18,4 +18,6 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, Lo
 	long countByProductId(Long productId);
 
 	List<ProductReview> findByProductIdOrderByCreatedAtDesc(Long productId);
+
+	void deleteByProductId(Long productId);
 }

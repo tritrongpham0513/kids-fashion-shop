@@ -101,6 +101,8 @@
         <form th:action="@{/cart/add}" method="post">
           <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
           <input type="hidden" name="productId" th:value="${product.id}"/>
+          <input type="hidden" name="colorLabel" id="input-color-label" value="Sage Green"/>
+          <input type="hidden" name="sizeLabel" id="input-size-label" value="1-2Y"/>
           
           <div class="attribute-section" style="margin-top: 32px;">
             <label class="qty-label">Số lượng</label>
@@ -287,11 +289,15 @@
     document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
     el.classList.add('active');
     document.getElementById('selected-color').innerText = name;
+    var c = document.getElementById('input-color-label');
+    if (c) c.value = name;
   }
 
   function selectSize(el) {
     document.querySelectorAll('.size-pill').forEach(s => s.classList.remove('active'));
     el.classList.add('active');
+    var s = document.getElementById('input-size-label');
+    if (s) s.value = (el.textContent || '').trim();
   }
 
   function initStarRating(container) {

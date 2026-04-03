@@ -8,6 +8,10 @@ public class CartLineDto {
 
 	private Product product;
 	private Integer quantity;
+	/** Khóa dòng giỏ (CartLineKey.encode) — dùng trong form cập nhật / xóa */
+	private String lineKey;
+	private String colorLabel;
+	private String sizeLabel;
 
 	public CartLineDto() {
 	}
@@ -31,6 +35,30 @@ public class CartLineDto {
 
 	public void setQuantity(Integer quantity) {
 		this.quantity = quantity;
+	}
+
+	public String getLineKey() {
+		return this.lineKey;
+	}
+
+	public void setLineKey(String lineKey) {
+		this.lineKey = lineKey;
+	}
+
+	public String getColorLabel() {
+		return this.colorLabel;
+	}
+
+	public void setColorLabel(String colorLabel) {
+		this.colorLabel = colorLabel;
+	}
+
+	public String getSizeLabel() {
+		return this.sizeLabel;
+	}
+
+	public void setSizeLabel(String sizeLabel) {
+		this.sizeLabel = sizeLabel;
 	}
 
 	public BigDecimal getLineSubtotal() {

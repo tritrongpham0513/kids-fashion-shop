@@ -8,31 +8,32 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-
-import java.math.BigDecimal;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "order_lines")
-public class OrderLine {
+@Table(name = "cart_items", uniqueConstraints = {
+		@UniqueConstraint(name = "uk_cart_user_product_variant", columnNames = { "user_id", "product_id", "color_label",
+				"size_label" })
+})
+public class CartItem {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "shop_order_id", nullable = false)
-	private ShopOrder shopOrder;
+	@JoinColumn(name = "user_id", nullable = false)
+	private AppUser user;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "product_id", nullable = false)
 	private Product product;
 
-	@Column(nullable = false)
+	@Column(name = "quantity", nullable = false)
 	private Integer quantity;
-
-	@Column(name = "unit_price", nullable = false, precision = 12, scale = 2)
-	private BigDecimal unitPrice;
 
 	@Column(name = "color_label", nullable = false, length = 120)
 	private String colorLabel = "";
@@ -40,7 +41,18 @@ public class OrderLine {
 	@Column(name = "size_label", nullable = false, length = 120)
 	private String sizeLabel = "";
 
-	public OrderLine() {
+	public CartItem() {
+	}
+
+	@PrePersist
+	@PreUpdate
+	private void normalizeVariantLabels() {
+		if (this.colorLabel == null) {
+			this.colorLabel = "";
+		}
+		if (this.sizeLabel == null) {
+			this.sizeLabel = "";
+		}
 	}
 
 	public Long getId() {
@@ -51,12 +63,12 @@ public class OrderLine {
 		this.id = id;
 	}
 
-	public ShopOrder getShopOrder() {
-		return this.shopOrder;
+	public AppUser getUser() {
+		return this.user;
 	}
 
-	public void setShopOrder(ShopOrder shopOrder) {
-		this.shopOrder = shopOrder;
+	public void setUser(AppUser user) {
+		this.user = user;
 	}
 
 	public Product getProduct() {
@@ -75,14 +87,6 @@ public class OrderLine {
 		this.quantity = quantity;
 	}
 
-	public BigDecimal getUnitPrice() {
-		return this.unitPrice;
-	}
-
-	public void setUnitPrice(BigDecimal unitPrice) {
-		this.unitPrice = unitPrice;
-	}
-
 	public String getColorLabel() {
 		return this.colorLabel;
 	}
@@ -98,11 +102,5 @@ public class OrderLine {
 	public void setSizeLabel(String sizeLabel) {
 		this.sizeLabel = sizeLabel == null ? "" : sizeLabel;
 	}
-
-	public BigDecimal getLineTotal() {
-		if (this.unitPrice == null || this.quantity == null) {
-			return BigDecimal.ZERO;
-		}
-		return this.unitPrice.multiply(new BigDecimal(this.quantity.toString()));
-	}
 }
+

@@ -3,6 +3,7 @@ package com.kidfashion.ecommerce.kids_fashion_shop.controller.admin;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.kidfashion.ecommerce.kids_fashion_shop.model.Category;
 import com.kidfashion.ecommerce.kids_fashion_shop.model.Product;
@@ -91,8 +93,16 @@ public class AdminProductController {
 	}
 
 	@PostMapping("/{id}/delete")
-	public String delete(@PathVariable("id") Long id) {
-		this.productService.deleteById(id);
+	public String delete(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+		try {
+			this.productService.deleteById(id);
+			redirectAttributes.addFlashAttribute("successMessage", "Đã xóa sản phẩm.");
+		} catch (IllegalStateException ex) {
+			redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+		} catch (DataIntegrityViolationException ex) {
+			redirectAttributes.addFlashAttribute("errorMessage",
+					"Không thể xóa sản phẩm vì còn dữ liệu liên quan. Vui lòng thử lại sau.");
+		}
 		return "redirect:/admin/products";
 	}
 }

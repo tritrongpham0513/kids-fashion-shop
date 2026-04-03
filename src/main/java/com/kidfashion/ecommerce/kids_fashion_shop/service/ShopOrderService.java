@@ -1,5 +1,6 @@
 package com.kidfashion.ecommerce.kids_fashion_shop.service;
 
+import com.kidfashion.ecommerce.kids_fashion_shop.dto.CartLineDto;
 import com.kidfashion.ecommerce.kids_fashion_shop.model.AppUser;
 import com.kidfashion.ecommerce.kids_fashion_shop.model.DiscountCode;
 import com.kidfashion.ecommerce.kids_fashion_shop.model.OrderLine;
@@ -14,9 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class ShopOrderService {
@@ -49,28 +48,38 @@ public class ShopOrderService {
 	}
 
 	@Transactional
-	public ShopOrder placeOrder(Long customerId, Map<Long, Integer> cartMap, String discountCodeRaw) {
+	public ShopOrder placeOrder(Long customerId, List<CartLineDto> cartLines, String discountCodeRaw,
+			String shippingAddressRaw) {
 		Optional<AppUser> customerOpt = this.appUserService.findById(customerId);
 		if (customerOpt.isEmpty()) {
 			throw new IllegalStateException("Không tìm thấy khách hàng.");
 		}
-		if (cartMap == null || cartMap.isEmpty()) {
+		if (cartLines == null || cartLines.isEmpty()) {
 			throw new IllegalStateException("Giỏ hàng trống.");
 		}
 
 		AppUser customer = customerOpt.get();
+		String shippingAddress = normalizeShippingAddress(shippingAddressRaw);
+		if (shippingAddress == null) {
+			throw new IllegalStateException("Vui lòng nhập hoặc chọn địa chỉ giao hàng.");
+		}
 
 		ShopOrder order = new ShopOrder();
 		order.setCustomer(customer);
 		order.setStatus(OrderStatus.CHO_XAC_NHAN);
+		order.setShippingAddress(shippingAddress);
 		order.setCreatedAt(LocalDateTime.now());
 
 		BigDecimal subtotal = BigDecimal.ZERO;
 		List<OrderLine> lines = new ArrayList<>();
 
-		Set<Long> productIds = cartMap.keySet();
-		for (Long productId : productIds) {
-			Integer q = cartMap.get(productId);
+		for (int i = 0; i < cartLines.size(); i++) {
+			CartLineDto dto = cartLines.get(i);
+			if (dto == null || dto.getProduct() == null || dto.getProduct().getId() == null) {
+				continue;
+			}
+			Long productId = dto.getProduct().getId();
+			Integer q = dto.getQuantity();
 			if (q == null || q <= 0) {
 				continue;
 			}
@@ -89,6 +98,8 @@ public class ShopOrderService {
 			line.setProduct(p);
 			line.setQuantity(q);
 			line.setUnitPrice(p.getPrice());
+			line.setColorLabel(dto.getColorLabel() == null ? "" : dto.getColorLabel());
+			line.setSizeLabel(dto.getSizeLabel() == null ? "" : dto.getSizeLabel());
 
 			BigDecimal lineTotal = p.getPrice().multiply(new BigDecimal(q.toString()));
 			subtotal = subtotal.add(lineTotal);
@@ -145,6 +156,20 @@ public class ShopOrderService {
 		this.hotScoreService.recalculateAll();
 
 		return saved;
+	}
+
+	private String normalizeShippingAddress(String raw) {
+		if (raw == null) {
+			return null;
+		}
+		String value = raw.trim();
+		if (value.isEmpty()) {
+			return null;
+		}
+		if (value.length() > 400) {
+			throw new IllegalStateException("Địa chỉ giao hàng quá dài.");
+		}
+		return value;
 	}
 
 	@Transactional

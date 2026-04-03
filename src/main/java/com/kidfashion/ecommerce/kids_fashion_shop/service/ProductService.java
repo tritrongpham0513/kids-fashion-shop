@@ -1,8 +1,10 @@
 package com.kidfashion.ecommerce.kids_fashion_shop.service;
 
 import com.kidfashion.ecommerce.kids_fashion_shop.model.Product;
+import com.kidfashion.ecommerce.kids_fashion_shop.repository.CartItemRepository;
 import com.kidfashion.ecommerce.kids_fashion_shop.repository.OrderLineRepository;
 import com.kidfashion.ecommerce.kids_fashion_shop.repository.ProductRepository;
+import com.kidfashion.ecommerce.kids_fashion_shop.repository.ProductReviewRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -20,12 +22,17 @@ public class ProductService {
 
 	private final ProductRepository productRepository;
 	private final OrderLineRepository orderLineRepository;
+	private final ProductReviewRepository productReviewRepository;
+	private final CartItemRepository cartItemRepository;
 	private final HotScoreService hotScoreService;
 
 	public ProductService(ProductRepository productRepository, OrderLineRepository orderLineRepository,
+			ProductReviewRepository productReviewRepository, CartItemRepository cartItemRepository,
 			HotScoreService hotScoreService) {
 		this.productRepository = productRepository;
 		this.orderLineRepository = orderLineRepository;
+		this.productReviewRepository = productReviewRepository;
+		this.cartItemRepository = cartItemRepository;
 		this.hotScoreService = hotScoreService;
 	}
 
@@ -112,6 +119,14 @@ public class ProductService {
 
 	@Transactional
 	public void deleteById(Long id) {
+		if (id == null) {
+			return;
+		}
+		if (this.orderLineRepository.existsByProductId(id)) {
+			throw new IllegalStateException("Không thể xóa sản phẩm đã phát sinh trong đơn hàng.");
+		}
+		this.cartItemRepository.deleteByProductId(id);
+		this.productReviewRepository.deleteByProductId(id);
 		this.productRepository.deleteById(id);
 	}
 

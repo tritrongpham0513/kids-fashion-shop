@@ -5,33 +5,42 @@
 <header th:replace="~{fragments/layout :: header}"></header>
 <main class="container admin-shell">
   <aside th:replace="~{fragments/admin-nav :: sidebar}"></aside>
-  <section>
-    <div class="section-head">
-      <h1 style="margin:0">Danh mục</h1>
-      <a class="btn btn-sm" th:href="@{/admin/categories/new}">Thêm</a>
+  <section class="admin-category-section">
+    <div class="section-head admin-category-head">
+      <div>
+        <h1 style="margin:0">Danh mục</h1>
+        <p class="muted" style="margin:6px 0 0;font-size:0.9rem">Sắp xếp theo tên. Xóa danh mục có sản phẩm: chọn danh mục đích ở bước tiếp theo.</p>
+      </div>
+      <a class="btn btn-sm" th:href="@{/admin/categories/new}">Thêm danh mục</a>
     </div>
     <p th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}">Đã lưu</p>
     <p th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}">Lỗi</p>
-    <div class="table-wrap">
-      <table class="data-table">
+    <div class="table-wrap admin-category-table-wrap">
+      <table class="data-table admin-category-table">
         <thead>
-        <tr><th>Tên</th><th>Mô tả</th><th></th></tr>
+        <tr>
+          <th>Tên</th>
+          <th>Mô tả</th>
+          <th class="col-narrow">Số SP</th>
+          <th class="col-actions">Thao tác</th>
+        </tr>
         </thead>
         <tbody>
         <tr th:each="c : ${categories}">
-          <td th:text="${c.name}">Tên</td>
-          <td th:text="${c.description}">Mô tả</td>
-          <td class="pill-row">
+          <td><strong th:text="${c.name}">Tên</strong></td>
+          <td class="cell-muted" th:text="${#strings.isEmpty(c.description)} ? '—' : ${c.description}">—</td>
+          <td class="col-narrow">
+            <span class="badge-count" th:text="${productCountByCategory[c.id]}">0</span>
+          </td>
+          <td class="col-actions pill-row">
             <a class="btn btn-sm btn-ghost" th:href="@{'/admin/categories/' + ${c.id} + '/edit'}">Sửa</a>
-            <form th:action="@{'/admin/categories/' + ${c.id} + '/delete'}" method="post" style="display:inline">
-              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-              <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Xóa danh mục này?');">Xóa</button>
-            </form>
+            <a class="btn btn-sm btn-danger btn-outline" th:href="@{'/admin/categories/' + ${c.id} + '/delete-confirm'}">Xóa</a>
           </td>
         </tr>
         </tbody>
       </table>
     </div>
+    <p th:if="${categories == null || categories.isEmpty()}" class="muted" style="margin-top:1rem">Chưa có danh mục. Hãy thêm danh mục đầu tiên.</p>
   </section>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
