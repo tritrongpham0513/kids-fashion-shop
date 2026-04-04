@@ -3,34 +3,117 @@
 <head th:replace="~{fragments/layout :: head(title=${pageTitle})}"></head>
 <body>
 <header th:replace="~{fragments/layout :: header}"></header>
-<main class="section">
+<main class="section auth-page">
   <div class="container">
-    <div class="form-card" style="max-width:520px;margin:0 auto">
-      <h2 style="margin-top:0">Đăng ký</h2>
+    <div class="form-card auth-register-card">
+      <div class="auth-card-head">
+        <h2 class="auth-card-title">Tạo tài khoản</h2>
+        <p class="auth-card-sub">Nhập thông tin bên dưới để mua sắm và theo dõi đơn hàng dễ dàng hơn.</p>
+      </div>
+
       <div th:if="${errorMessage != null}" class="alert alert-error" th:text="${errorMessage}"></div>
-      <form th:action="@{/register}" method="post" class="form-grid">
+
+      <form th:action="@{/register}" method="post" class="auth-form-grid" id="registerForm" novalidate>
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-        <label class="field">Họ tên
-          <input type="text" name="fullName" required/>
+
+        <div class="auth-row-2">
+          <label class="field auth-field">
+            <span class="auth-label">Họ và tên <span class="auth-req" aria-hidden="true">*</span></span>
+            <input type="text" name="fullName" required autocomplete="name" placeholder="Nguyễn Văn A"
+                   maxlength="120"/>
+          </label>
+          <label class="field auth-field">
+            <span class="auth-label">Email <span class="auth-req" aria-hidden="true">*</span></span>
+            <input type="email" name="email" required autocomplete="email" inputmode="email" placeholder="ban@email.com"/>
+          </label>
+        </div>
+
+        <div class="auth-row-2">
+          <div class="field auth-field">
+            <span class="auth-label">Mật khẩu <span class="auth-req" aria-hidden="true">*</span></span>
+            <span class="auth-hint">Tối thiểu 6 ký tự</span>
+            <div class="password-field-wrap">
+              <input type="password" id="regPassword" name="password" required minlength="6" maxlength="128"
+                     autocomplete="new-password" placeholder="••••••••"/>
+              <button type="button" class="password-toggle-btn" data-password-target="regPassword" aria-label="Hiện mật khẩu">
+                Hiện
+              </button>
+            </div>
+          </div>
+          <div class="field auth-field">
+            <span class="auth-label">Xác nhận mật khẩu <span class="auth-req" aria-hidden="true">*</span></span>
+            <span class="auth-hint">Nhập lại giống mật khẩu phía trên</span>
+            <div class="password-field-wrap">
+              <input type="password" id="regPasswordConfirm" name="confirmPassword" required minlength="6" maxlength="128"
+                     autocomplete="new-password" placeholder="••••••••"/>
+              <button type="button" class="password-toggle-btn" data-password-target="regPasswordConfirm" aria-label="Hiện mật khẩu">
+                Hiện
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-row-2">
+          <label class="field auth-field">
+            <span class="auth-label">Số điện thoại</span>
+            <span class="auth-hint">Dùng để liên hệ khi giao hàng (không bắt buộc)</span>
+            <input type="tel" name="phone" autocomplete="tel" inputmode="tel" placeholder="0xxx xxx xxx" maxlength="20"/>
+          </label>
+          <label class="field auth-field auth-field-address">
+            <span class="auth-label">Địa chỉ</span>
+            <span class="auth-hint">Có thể cập nhật sau trong tài khoản</span>
+            <textarea name="address" rows="3" maxlength="500" placeholder="Số nhà, đường, phường/xã, tỉnh/thành phố"></textarea>
+          </label>
+        </div>
+
+        <label class="auth-terms">
+          <input type="checkbox" name="agreeTerms" value="true" required/>
+          <span>Tôi đồng ý với <a th:href="@{/}" class="auth-inline-link">Điều khoản dịch vụ</a> và xác nhận đã đọc
+            <a th:href="@{/}" class="auth-inline-link">Chính sách bảo mật</a> của cửa hàng.</span>
         </label>
-        <label class="field">Email
-          <input type="email" name="email" required autocomplete="email"/>
-        </label>
-        <label class="field">Mật khẩu (tối thiểu 6 ký tự)
-          <input type="password" name="password" required autocomplete="new-password"/>
-        </label>
-        <label class="field">Điện thoại
-          <input type="text" name="phone"/>
-        </label>
-        <label class="field">Địa chỉ
-          <textarea name="address"></textarea>
-        </label>
-        <button type="submit" class="btn">Tạo tài khoản</button>
+
+        <button type="submit" class="btn auth-submit-btn">Đăng ký</button>
       </form>
-      <p class="muted">Đã có tài khoản? <a th:href="@{/login}">Đăng nhập</a></p>
+
+      <div th:if="${!#strings.isEmpty(@environment.getProperty('spring.security.oauth2.client.registration.google.client-id'))}"
+           class="auth-divider"><span>hoặc</span></div>
+      <a th:if="${!#strings.isEmpty(@environment.getProperty('spring.security.oauth2.client.registration.google.client-id'))}"
+         th:href="@{/oauth2/authorization/google}" class="btn btn-outline auth-google-btn">
+        Tiếp tục với Google
+      </a>
+
+      <p class="auth-footer-line muted">Đã có tài khoản?
+        <a th:href="@{/login}" class="auth-inline-link auth-footer-link">Đăng nhập</a>
+      </p>
     </div>
   </div>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
+<script>
+(function () {
+  document.querySelectorAll('.password-toggle-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var id = btn.getAttribute('data-password-target');
+      var input = id && document.getElementById(id);
+      if (!input) return;
+      var show = input.getAttribute('type') === 'password';
+      input.setAttribute('type', show ? 'text' : 'password');
+      btn.textContent = show ? 'Ẩn' : 'Hiện';
+      btn.setAttribute('aria-label', show ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
+    });
+  });
+  var form = document.getElementById('registerForm');
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      var p = document.getElementById('regPassword');
+      var c = document.getElementById('regPasswordConfirm');
+      if (p && c && p.value !== c.value) {
+        e.preventDefault();
+        alert('Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại.');
+      }
+    });
+  }
+})();
+</script>
 </body>
 </html>

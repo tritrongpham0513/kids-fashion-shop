@@ -33,16 +33,31 @@ public class AuthController {
 
 	@PostMapping("/register")
 	public String registerSubmit(@RequestParam("email") String email, @RequestParam("password") String password,
-			@RequestParam("fullName") String fullName, @RequestParam(name = "phone", required = false) String phone,
-			@RequestParam(name = "address", required = false) String address, RedirectAttributes redirectAttributes) {
+			@RequestParam("confirmPassword") String confirmPassword, @RequestParam("fullName") String fullName,
+			@RequestParam(name = "phone", required = false) String phone,
+			@RequestParam(name = "address", required = false) String address,
+			@RequestParam(name = "agreeTerms", required = false) String agreeTerms,
+			RedirectAttributes redirectAttributes) {
+		if (fullName == null || fullName.isBlank()) {
+			redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng nhập họ tên.");
+			return "redirect:/register";
+		}
+		if (!"true".equalsIgnoreCase(agreeTerms)) {
+			redirectAttributes.addFlashAttribute("errorMessage", "Bạn cần đồng ý với điều khoản dịch vụ để tiếp tục.");
+			return "redirect:/register";
+		}
 		Optional<com.kidfashion.ecommerce.kids_fashion_shop.model.AppUser> existing = this.appUserService
 				.findByEmail(email);
 		if (existing.isPresent()) {
-			redirectAttributes.addFlashAttribute("errorMessage", "Email da duoc su dung.");
+			redirectAttributes.addFlashAttribute("errorMessage", "Email này đã được sử dụng.");
 			return "redirect:/register";
 		}
 		if (password == null || password.length() < 6) {
 			redirectAttributes.addFlashAttribute("errorMessage", "Mật khẩu cần tối thiểu 6 ký tự.");
+			return "redirect:/register";
+		}
+		if (confirmPassword == null || !password.equals(confirmPassword)) {
+			redirectAttributes.addFlashAttribute("errorMessage", "Xác nhận mật khẩu không khớp.");
 			return "redirect:/register";
 		}
 		this.appUserService.registerCustomer(email, password, fullName, phone, address);
