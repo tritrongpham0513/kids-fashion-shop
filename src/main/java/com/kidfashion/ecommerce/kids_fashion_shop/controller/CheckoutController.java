@@ -26,10 +26,12 @@ import com.kidfashion.ecommerce.kids_fashion_shop.dto.CartLineDto;
 import com.kidfashion.ecommerce.kids_fashion_shop.dto.CheckoutDiscountPreviewRequest;
 import com.kidfashion.ecommerce.kids_fashion_shop.dto.CheckoutDiscountPreviewResponse;
 import com.kidfashion.ecommerce.kids_fashion_shop.model.DiscountCode;
+import com.kidfashion.ecommerce.kids_fashion_shop.model.OrderStatus;
 import com.kidfashion.ecommerce.kids_fashion_shop.model.ShopOrder;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.CartPersistenceService;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.CartSessionService;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.DiscountCodeService;
+import com.kidfashion.ecommerce.kids_fashion_shop.service.SePayService;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.ShopOrderService;
 
 import jakarta.servlet.http.HttpSession;
@@ -41,13 +43,44 @@ public class CheckoutController {
 	private final CartPersistenceService cartPersistenceService;
 	private final ShopOrderService shopOrderService;
 	private final DiscountCodeService discountCodeService;
+	private final SePayService sePayService;
 
 	public CheckoutController(CartSessionService cartSessionService, ShopOrderService shopOrderService,
-			DiscountCodeService discountCodeService, CartPersistenceService cartPersistenceService) {
+			DiscountCodeService discountCodeService, CartPersistenceService cartPersistenceService,
+			SePayService sePayService) {
 		this.cartSessionService = cartSessionService;
 		this.shopOrderService = shopOrderService;
 		this.discountCodeService = discountCodeService;
 		this.cartPersistenceService = cartPersistenceService;
+		this.sePayService = sePayService;
+	}
+
+	@GetMapping("/checkout/payment/sepay")
+	@PreAuthorize("hasRole('CUSTOMER')")
+	public String showSePayPayment(@RequestParam("id") Long orderId, 
+	                               @AuthenticationPrincipal ShopUserDetails principal, 
+	                               Model model) {
+		Optional<ShopOrder> orderOpt = this.shopOrderService.findById(orderId);
+		if (orderOpt.isEmpty()) {
+			return "redirect:/";
+		}
+		ShopOrder order = orderOpt.get();
+		// Security check: ensure the order belongs to the current customer
+		if (!order.getCustomer().getId().equals(principal.getAppUser().getId())) {
+			return "redirect:/";
+		}
+		
+		if (order.getStatus() != OrderStatus.CHO_THANH_TOAN) {
+			return "redirect:/account/orders";
+		}
+		
+		String qrUrl = this.sePayService.generateQrUrl(order);
+		this.shopOrderService.updateStatus(order.getId(), order.getStatus()); // Force save transfer content
+		
+		model.addAttribute("order", order);
+		model.addAttribute("qrUrl", qrUrl);
+		model.addAttribute("pageTitle", "Thanh toán đơn hàng");
+		return "shop/sepay-payment";
 	}
 
 	@GetMapping("/checkout")
@@ -161,6 +194,7 @@ public class CheckoutController {
 			@RequestParam(name = "discountCode", required = false) String discountCode,
 			@RequestParam(name = "addressOption", required = false) String addressOption,
 			@RequestParam(name = "shippingAddressInput", required = false) String shippingAddressInput,
+			@RequestParam(name = "paymentMethod", required = false, defaultValue = "COD") String paymentMethod,
 			RedirectAttributes redirectAttributes) {
 		if (principal == null) {
 			return "redirect:/login";
@@ -193,7 +227,7 @@ public class CheckoutController {
 			}
 		}
 		try {
-			ShopOrder order = this.shopOrderService.placeOrder(customerId, lines, discountCode, shippingAddress);
+			ShopOrder order = this.shopOrderService.placeOrder(customerId, lines, discountCode, shippingAddress, paymentMethod);
 			this.cartSessionService.clearBuyNowCheckout(session);
 			if (selectedOnly) {
 				// Giữ lại các món chưa chọn
@@ -204,6 +238,11 @@ public class CheckoutController {
 				this.cartSessionService.clear(session);
 				this.cartPersistenceService.clearUserCart(customerId);
 			}
+			
+			if ("SEPAY".equalsIgnoreCase(paymentMethod)) {
+				return "redirect:/checkout/payment/sepay?id=" + order.getId();
+			}
+			
 			redirectAttributes.addFlashAttribute("orderPlacedId", order.getId());
 			return "redirect:/account/orders";
 		} catch (IllegalStateException ex) {

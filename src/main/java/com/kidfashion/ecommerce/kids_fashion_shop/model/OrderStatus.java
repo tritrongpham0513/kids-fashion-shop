@@ -1,6 +1,7 @@
 package com.kidfashion.ecommerce.kids_fashion_shop.model;
 
 public enum OrderStatus {
+	CHO_THANH_TOAN("Chờ thanh toán"),
 	CHO_XAC_NHAN("Chờ xác nhận"),
 	DANG_GIAO("Đang giao"),
 	HOAN_THANH("Hoàn thành"),

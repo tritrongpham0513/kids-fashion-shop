@@ -49,7 +49,7 @@ public class ShopOrderService {
 
 	@Transactional
 	public ShopOrder placeOrder(Long customerId, List<CartLineDto> cartLines, String discountCodeRaw,
-			String shippingAddressRaw) {
+			String shippingAddressRaw, String paymentMethod) {
 		Optional<AppUser> customerOpt = this.appUserService.findById(customerId);
 		if (customerOpt.isEmpty()) {
 			throw new IllegalStateException("Không tìm thấy khách hàng.");
@@ -66,7 +66,17 @@ public class ShopOrderService {
 
 		ShopOrder order = new ShopOrder();
 		order.setCustomer(customer);
-		order.setStatus(OrderStatus.CHO_XAC_NHAN);
+		order.setPaymentMethod(paymentMethod == null ? "COD" : paymentMethod);
+		
+		// Luồng thanh toán: Nếu SePay thì Chờ thanh toán, nếu COD thì Chờ xác nhận
+		if ("SEPAY".equalsIgnoreCase(order.getPaymentMethod())) {
+			order.setStatus(OrderStatus.CHO_THANH_TOAN);
+			order.setPaymentStatus("PENDING");
+		} else {
+			order.setStatus(OrderStatus.CHO_XAC_NHAN);
+			order.setPaymentStatus("COD");
+		}
+
 		order.setShippingAddress(shippingAddress);
 		order.setCreatedAt(LocalDateTime.now());
 

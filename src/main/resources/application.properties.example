@@ -1,0 +1,24 @@
+# Kids Fashion Shop - Configuration Example
+# Copy this file to application.properties and fill in your values
+spring.application.name=kids-fashion-shop
+
+# MySQL Connection (Change to your database credentials)
+MYSQL_URL=jdbc:mysql://localhost:3306/kids_fashion_shop?createDatabaseIfNotExist=true
+MYSQL_USER=your_username
+MYSQL_PASSWORD=your_password
+
+# SePay Automated Payment (QR)
+SEPAY_BANK_ID=MBBank
+SEPAY_ACC_NUMBER=000000000000
+SEPAY_ACC_NAME=CU_CHU_TAI_KHOAN
+SEPAY_WEBHOOK_TOKEN=your_sepay_webhook_token
+
+# Admin Account
+ADMIN_EMAIL=admin@kidfashion.local
+ADMIN_PASSWORD=your_admin_password
+
+# Google OAuth2 (Optional)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+server.port=8081

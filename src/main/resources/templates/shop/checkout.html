@@ -59,7 +59,26 @@
 
         <h3 class="checkout-section-title checkout-section-title--spaced">Hình thức thanh toán</h3>
         <div class="boutique-field">
-          <span class="field-label">Phương thức vận chuyển</span>
+          <span class="field-label">Chọn phương thức thanh toán</span>
+          <label class="boutique-radio-label payment-method-option">
+            <input type="radio" name="paymentMethodVisual" value="COD" checked/>
+            <div class="method-icon-box">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+            </div>
+            Thanh toán khi nhận hàng (COD)
+          </label>
+          <label class="boutique-radio-label payment-method-option">
+            <input type="radio" name="paymentMethodVisual" value="SEPAY"/>
+            <div class="method-icon-box">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect><rect x="7" y="14" width="3" height="3"></rect><rect x="14" y="14" width="3" height="3"></rect></svg>
+            </div>
+            Chuyển khoản QR Tự động (SePay)
+          </label>
+        </div>
+
+        <h3 class="checkout-section-title checkout-section-title--spaced">Phương thức vận chuyển</h3>
+        <div class="boutique-field">
+          <span class="field-label">Công ty vận chuyển</span>
           <div class="boutique-input-wrap">
             <div class="prefix-circle">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
@@ -105,6 +124,7 @@
             <input type="hidden" name="discountCode" id="discount-code-hidden"/>
             <input type="hidden" name="addressOption" id="address-option-hidden" value="default"/>
             <input type="hidden" name="shippingAddressInput" id="shipping-address-hidden"/>
+            <input type="hidden" name="paymentMethod" id="payment-method-hidden" value="COD"/>
             <button type="submit" class="luxury-submit-btn checkout-submit-btn">Xác nhận đặt hàng</button>
           </form>
 
@@ -129,7 +149,9 @@
     var discountHidden = document.getElementById('discount-code-hidden');
     var addressOptionHidden = document.getElementById('address-option-hidden');
     var addressHidden = document.getElementById('shipping-address-hidden');
+    var paymentMethodHidden = document.getElementById('payment-method-hidden');
     var addressOptions = document.querySelectorAll('input[name="addressOptionVisual"]');
+    var paymentOptions = document.querySelectorAll('input[name="paymentMethodVisual"]');
     var hasDefault = /*[[${hasDefaultAddress}]]*/ false;
 
     var previewUrl = /*[[@{/checkout/preview-discount}]]*/ '/checkout/preview-discount';
@@ -195,28 +217,38 @@
       return hasDefault ? 'default' : 'new';
     }
 
-    function syncAddressFormData() {
-      if (!addressOptionHidden || !addressHidden) return;
-      var option = selectedAddressOption();
-      addressOptionHidden.value = option;
-      addressHidden.value = addressInput ? (addressInput.value || '').trim() : '';
-      if (discountHidden) {
-        discountHidden.value = input ? (input.value || '').trim() : '';
+    function selectedPaymentMethod() {
+      if (!paymentOptions) return 'COD';
+      for (var i = 0; i < paymentOptions.length; i++) {
+        if (paymentOptions[i].checked) return paymentOptions[i].value;
       }
+      return 'COD';
+    }
+
+    function syncCheckoutFormData() {
+      if (addressOptionHidden) addressOptionHidden.value = selectedAddressOption();
+      if (addressHidden) addressHidden.value = addressInput ? (addressInput.value || '').trim() : '';
+      if (discountHidden) discountHidden.value = input ? (input.value || '').trim() : '';
+      if (paymentMethodHidden) paymentMethodHidden.value = selectedPaymentMethod();
     }
 
     if (addressOptions && addressOptions.length > 0) {
       for (var i = 0; i < addressOptions.length; i++) {
-        addressOptions[i].addEventListener('change', syncAddressFormData);
+        addressOptions[i].addEventListener('change', syncCheckoutFormData);
       }
     }
-    if (addressInput) addressInput.addEventListener('input', syncAddressFormData);
+    if (paymentOptions && paymentOptions.length > 0) {
+      for (var i = 0; i < paymentOptions.length; i++) {
+        paymentOptions[i].addEventListener('change', syncCheckoutFormData);
+      }
+    }
+    if (addressInput) addressInput.addEventListener('input', syncCheckoutFormData);
     if (placeForm) {
       placeForm.addEventListener('submit', function () {
-        syncAddressFormData();
+        syncCheckoutFormData();
       });
     }
-    syncAddressFormData();
+    syncCheckoutFormData();
     runPreview();
   })();
   /*]]>*/

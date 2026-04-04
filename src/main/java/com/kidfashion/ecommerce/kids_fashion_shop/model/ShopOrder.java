@@ -53,6 +53,18 @@ public class ShopOrder {
 	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt;
 
+	@Column(name = "payment_method", length = 50)
+	private String paymentMethod;
+
+	@Column(name = "payment_status", length = 30)
+	private String paymentStatus;
+
+	@Column(name = "sepay_transfer_content", length = 100)
+	private String sepayTransferContent;
+
+	@Column(name = "sepay_transaction_id", length = 100)
+	private String sepayTransactionId;
+
 	@OneToMany(mappedBy = "shopOrder", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<OrderLine> lines = new ArrayList<OrderLine>();
 
@@ -138,5 +150,37 @@ public class ShopOrder {
 
 	public void setLines(List<OrderLine> lines) {
 		this.lines = lines;
+	}
+
+	public String getPaymentMethod() {
+		return paymentMethod;
+	}
+
+	public void setPaymentMethod(String paymentMethod) {
+		this.paymentMethod = paymentMethod;
+	}
+
+	public String getPaymentStatus() {
+		return paymentStatus;
+	}
+
+	public void setPaymentStatus(String paymentStatus) {
+		this.paymentStatus = paymentStatus;
+	}
+
+	public String getSepayTransferContent() {
+		return sepayTransferContent;
+	}
+
+	public void setSepayTransferContent(String sepayTransferContent) {
+		this.sepayTransferContent = sepayTransferContent;
+	}
+
+	public String getSepayTransactionId() {
+		return sepayTransactionId;
+	}
+
+	public void setSepayTransactionId(String sepayTransactionId) {
+		this.sepayTransactionId = sepayTransactionId;
 	}
 }

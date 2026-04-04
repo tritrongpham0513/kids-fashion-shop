@@ -32,8 +32,6 @@ build/
 ### VS Code ###
 .vscode/
 
-# Ẩn file chứa mật khẩu database
-src/main/resources/application.properties
 
 # Ẩn file secret đăng nhập Google OAuth2 (local)
 secrets/google-oauth.properties

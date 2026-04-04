@@ -64,12 +64,15 @@ public class SecurityConfig {
 		ObjectProvider<ClientRegistrationRepository> clientRegistrationRepositoryProvider) throws Exception {
 		http.authenticationProvider(authenticationProviderBean);
 		http.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/css/**", "/js/**", "/images/**", "/error", "/oauth2/**", "/login/oauth2/**")
+				.requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**", "/error", "/oauth2/**", "/login/oauth2/**", "/api/sepay/**")
 				.permitAll()
 				.requestMatchers("/admin/**").hasRole("ADMIN").requestMatchers("/checkout/**", "/account/**")
 				.authenticated().anyRequest().permitAll());
 		// Bật CSRF bằng cookie để vẫn có _csrf trong view nhưng không phụ thuộc session
-		http.csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));
+		http.csrf(csrf -> csrf
+				.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+				.ignoringRequestMatchers("/api/sepay/**")
+		);
 		http.formLogin(form -> form.loginPage("/login").permitAll().successHandler(loginSuccessHandler));
 		if (clientRegistrationRepositoryProvider.getIfAvailable() != null) {
 			http.oauth2Login(oauth -> oauth.loginPage("/login").successHandler(oAuth2LoginSuccessHandler));

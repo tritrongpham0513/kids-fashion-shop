@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title=${pageTitle})}"></head>
+<body class="luxury-bg">
+<header th:replace="~{fragments/layout :: header}"></header>
+<main class="section sepay-payment-page">
+    <div class="container container--narrow">
+        <div class="payment-card-luxury">
+            <div class="payment-header">
+                <div class="luxury-badge">Thanh toán an toàn</div>
+                <h1>Chuyển khoản QR Tự động</h1>
+                <p class="muted">Sử dụng ứng dụng Ngân hàng hoặc Ví điện tử để quét mã</p>
+            </div>
+
+            <div class="payment-main-grid">
+                <!-- QR Part -->
+                <div class="payment-qr-wrap">
+                    <div class="qr-container">
+                        <img th:src="${qrUrl}" alt="Mã QR Thanh toán SePay" class="qr-image"/>
+                        <div class="qr-overlay-logo">
+                            <img src="/images/logo-vietqr.png" th:src="@{/images/logo-vietqr.png}" alt="VietQR" onerror="this.style.display='none'"/>
+                        </div>
+                    </div>
+                    <div class="payment-timer">
+                        <div class="spinner-pink"></div>
+                        <span>Đang chờ hệ thống xác nhận...</span>
+                    </div>
+                </div>
+
+                <!-- Info Part -->
+                <div class="payment-info-wrap">
+                    <div class="info-group">
+                        <span class="info-label">Số tiền cần chuyển</span>
+                        <div class="info-value price-highlight" th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</div>
+                    </div>
+                    
+                    <div class="info-details-box">
+                        <div class="detail-row">
+                            <span class="row-label">Nội dung chuyển khoản:</span>
+                            <div class="row-copy-box">
+                                <strong id="transfer-content" th:text="${order.sepayTransferContent}">DH000</strong>
+                                <button class="btn-copy" onclick="copyText('transfer-content')">Sao chép</button>
+                            </div>
+                        </div>
+                        <p class="warning-text">Lưu ý: Bạn phải nhập <strong>chính xác</strong> nội dung trên để hệ thống duyệt đơn tự động.</p>
+                        
+                        <hr class="luxury-hr"/>
+                        
+                        <div class="bank-details-luxury">
+                            <div class="bank-row">
+                                <span>Ngân hàng:</span>
+                                <strong th:text="${@environment.getProperty('app.sepay.bank-id', 'MBBank')}">MBBank</strong>
+                            </div>
+                            <div class="bank-row">
+                                <span>Số tài khoản:</span>
+                                <strong th:text="${@environment.getProperty('app.sepay.account-number', '...')}">...</strong>
+                            </div>
+                            <div class="bank-row">
+                                <span>Chủ tài khoản:</span>
+                                <strong th:text="${@environment.getProperty('app.sepay.account-name', '...')}">...</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="payment-actions">
+                        <button class="btn btn-hero-solid w-100" onclick="window.location.reload()">Tôi đã chuyển khoản thành công</button>
+                        <a th:href="@{/account/orders}" class="btn btn-ghost w-100 mt-2">Xem trạng thái đơn hàng</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="payment-footer-note">
+                <p>Mọi thắc mắc vui lòng liên hệ Hotline: <strong>0123.456.789</strong></p>
+            </div>
+        </div>
+    </div>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script>
+    function copyText(id) {
+        var text = document.getElementById(id).innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Đã sao chép nội dung chuyển khoản!");
+        });
+    }
+
+    // Tự động reload mỗi 30 giây để kiểm tra trạng thái thanh toán (Simple Polling)
+    setTimeout(() => {
+        window.location.reload();
+    }, 30000);
+</script>
+
+<style>
+    .sepay-payment-page { padding: 40px 0; }
+    .container--narrow { max-width: 800px; }
+    .payment-card-luxury {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: var(--shadow-lg);
+    }
+    .payment-header { text-align: center; margin-bottom: 30px; }
+    .luxury-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        background: #e3f2fd;
+        color: #1976d2;
+        border-radius: 100px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+    .payment-main-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 40px;
+        align-items: start;
+    }
+    .qr-container {
+        position: relative;
+        background: #fff;
+        padding: 15px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .qr-image { width: 100%; height: auto; border-radius: 8px; }
+    .payment-timer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 20px;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+    .spinner-pink {
+        width: 18px;
+        height: 18px;
+        border: 2px solid #ff8fab33;
+        border-top-color: #ff8fab;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .info-group { margin-bottom: 24px; }
+    .info-label { display: block; color: var(--text-muted); margin-bottom: 4px; font-size: 0.9rem; }
+    .price-highlight { font-size: 1.8rem; font-weight: 800; color: #ff8fab; }
+    
+    .info-details-box {
+        background: var(--bg-body);
+        padding: 20px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+    }
+    .row-copy-box {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #fff;
+        padding: 10px 15px;
+        border-radius: 10px;
+        border: 1px dashed #ff8fab;
+        margin-top: 8px;
+    }
+    .btn-copy {
+        background: #ff8fab;
+        color: #fff;
+        border: none;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+    .warning-text { font-size: 0.85rem; color: #d32f2f; margin-top: 10px; }
+    .luxury-hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+    .bank-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; }
+    
+    @media (max-width: 768px) {
+        .payment-main-grid { grid-template-columns: 1fr; gap: 30px; }
+        .payment-card-luxury { padding: 25px; }
+    }
+</style>
+</body>
+</html>
