@@ -14,7 +14,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -42,12 +41,6 @@ public class CheckoutController {
 	private final CartPersistenceService cartPersistenceService;
 	private final ShopOrderService shopOrderService;
 	private final DiscountCodeService discountCodeService;
-
-    @org.springframework.beans.factory.annotation.Value("${sepay.bank.acc}")
-    private String sepayBankAcc;
-
-    @org.springframework.beans.factory.annotation.Value("${sepay.bank.code}")
-    private String sepayBankCode;
 
 	public CheckoutController(CartSessionService cartSessionService, ShopOrderService shopOrderService,
 			DiscountCodeService discountCodeService, CartPersistenceService cartPersistenceService) {
@@ -168,7 +161,6 @@ public class CheckoutController {
 			@RequestParam(name = "discountCode", required = false) String discountCode,
 			@RequestParam(name = "addressOption", required = false) String addressOption,
 			@RequestParam(name = "shippingAddressInput", required = false) String shippingAddressInput,
-			@RequestParam(name = "paymentMethod", required = false) String paymentMethod,
 			RedirectAttributes redirectAttributes) {
 		if (principal == null) {
 			return "redirect:/login";
@@ -201,7 +193,7 @@ public class CheckoutController {
 			}
 		}
 		try {
-			ShopOrder order = this.shopOrderService.placeOrder(customerId, lines, discountCode, shippingAddress, paymentMethod);
+			ShopOrder order = this.shopOrderService.placeOrder(customerId, lines, discountCode, shippingAddress);
 			this.cartSessionService.clearBuyNowCheckout(session);
 			if (selectedOnly) {
 				// Giữ lại các món chưa chọn
@@ -212,39 +204,12 @@ public class CheckoutController {
 				this.cartSessionService.clear(session);
 				this.cartPersistenceService.clearUserCart(customerId);
 			}
-			
 			redirectAttributes.addFlashAttribute("orderPlacedId", order.getId());
-			
-			if ("SEPAY".equalsIgnoreCase(order.getPaymentMethod())) {
-				return "redirect:/checkout/payment/" + order.getId();
-			}
-			
 			return "redirect:/account/orders";
 		} catch (IllegalStateException ex) {
 			redirectAttributes.addFlashAttribute("checkoutError", ex.getMessage());
 			return "redirect:/checkout";
 		}
-	}
-
-	@GetMapping("/checkout/payment/{id}")
-	@PreAuthorize("hasRole('CUSTOMER')")
-	public String paymentQr(@PathVariable("id") Long id, @AuthenticationPrincipal ShopUserDetails principal, Model model) {
-		Optional<ShopOrder> orderOpt = this.shopOrderService.findById(id);
-		if (orderOpt.isEmpty()) {
-			return "redirect:/account/orders";
-		}
-		ShopOrder order = orderOpt.get();
-		// Security check: only the owner can see the QR
-		if (!order.getCustomer().getId().equals(principal.getAppUser().getId())) {
-			return "redirect:/account/orders";
-		}
-
-		model.addAttribute("order", order);
-		model.addAttribute("sepayBankAcc", sepayBankAcc);
-		model.addAttribute("sepayBankCode", sepayBankCode);
-		model.addAttribute("pageTitle", "Thanh toán đơn hàng #" + id);
-		
-		return "shop/payment-qr";
 	}
 
 	private String resolveShippingAddress(AppUser customer, String addressOption, String shippingAddressInput) {

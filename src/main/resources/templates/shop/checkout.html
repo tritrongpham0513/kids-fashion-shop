@@ -195,21 +195,11 @@
       return hasDefault ? 'default' : 'new';
     }
 
-    function selectedPaymentOption() {
-      for (var i = 0; i < paymentOptions.length; i++) {
-        if (paymentOptions[i].checked) return paymentOptions[i].value;
-      }
-      return 'COD';
-    }
-
     function syncAddressFormData() {
       if (!addressOptionHidden || !addressHidden) return;
       var option = selectedAddressOption();
       addressOptionHidden.value = option;
       addressHidden.value = addressInput ? (addressInput.value || '').trim() : '';
-      if (paymentMethodHidden) {
-          paymentMethodHidden.value = selectedPaymentOption();
-      }
       if (discountHidden) {
         discountHidden.value = input ? (input.value || '').trim() : '';
       }
@@ -218,11 +208,6 @@
     if (addressOptions && addressOptions.length > 0) {
       for (var i = 0; i < addressOptions.length; i++) {
         addressOptions[i].addEventListener('change', syncAddressFormData);
-      }
-    }
-    if (paymentOptions && paymentOptions.length > 0) {
-      for (var i = 0; i < paymentOptions.length; i++) {
-        paymentOptions[i].addEventListener('change', syncAddressFormData);
       }
     }
     if (addressInput) addressInput.addEventListener('input', syncAddressFormData);
