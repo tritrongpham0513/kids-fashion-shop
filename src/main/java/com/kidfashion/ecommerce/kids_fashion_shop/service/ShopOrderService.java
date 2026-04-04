@@ -157,6 +157,8 @@ public class ShopOrderService {
 			int q = line.getQuantity();
 			int stock = p.getStockQuantity() == null ? 0 : p.getStockQuantity();
 			p.setStockQuantity(stock - q);
+			// Lưu tường minh để đảm bảo tồn kho được cập nhật ngay lập tức xuống DB
+			this.productService.save(p);
 		}
 
 		if (applied != null) {
