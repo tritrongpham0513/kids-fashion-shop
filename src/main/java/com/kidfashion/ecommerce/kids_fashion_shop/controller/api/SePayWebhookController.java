@@ -79,16 +79,21 @@ public class SePayWebhookController {
 
     private Long extractOrderId(String content) {
         if (content == null) return null;
-        // Tìm số đứng sau chữ "DON HANG" hoặc số cuối cùng
-        Pattern pattern = Pattern.compile("DON HANG (\\d+)", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(content);
-        if (matcher.find()) {
-            try {
-                return Long.parseLong(matcher.group(1));
-            } catch (Exception e) {
-                return null;
-            }
-        }
+        // 1. Tìm "DON HANG X" (Ưu tiên cao nhất)
+        Pattern p1 = Pattern.compile("DON HANG (\\d+)", Pattern.CASE_INSENSITIVE);
+        Matcher m1 = p1.matcher(content);
+        if (m1.find()) return Long.parseLong(m1.group(1));
+
+        // 2. Tìm "DHX" (Ví dụ: DH1)
+        Pattern p2 = Pattern.compile("DH(\\d+)", Pattern.CASE_INSENSITIVE);
+        Matcher m2 = p2.matcher(content);
+        if (m2.find()) return Long.parseLong(m2.group(1));
+
+        // 3. Tìm số cuối cùng trong chuỗi (Dành cho nội dung chỉ có số)
+        Pattern p3 = Pattern.compile("(\\d+)$");
+        Matcher m3 = p3.matcher(content.trim());
+        if (m3.find()) return Long.parseLong(m3.group(1));
+
         return null;
     }
 }

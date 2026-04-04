@@ -7,12 +7,34 @@
     <div class="container container--narrow">
         <div class="payment-card-luxury">
             <div class="payment-header">
-                <div class="luxury-badge">Thanh toán an toàn</div>
-                <h1>Chuyển khoản QR Tự động</h1>
-                <p class="muted">Sử dụng ứng dụng Ngân hàng hoặc Ví điện tử để quét mã</p>
+                <div class="luxury-badge" th:if="${order.status.name() == 'CHO_THANH_TOAN'}">Thanh toán an toàn</div>
+                <div class="luxury-badge success" th:if="${order.status.name() == 'CHO_XAC_NHAN'}">Thanh toán thành công</div>
+                <h1 th:text="${order.status.name() == 'CHO_THANH_TOAN'} ? 'Chuyển khoản QR Tự động' : 'Cảm ơn bạn đã mua hàng!'">Chuyển khoản QR Tự động</h1>
+                <p class="muted" th:if="${order.status.name() == 'CHO_THANH_TOAN'}">Sử dụng ứng dụng Ngân hàng hoặc Ví điện tử để quét mã</p>
+                <p class="muted" th:if="${order.status.name() == 'CHO_XAC_NHAN'}">Đơn hàng của bạn đã được xác nhận thanh toán tự động.</p>
             </div>
 
-            <div class="payment-main-grid">
+            <!-- SUCCESS STATE -->
+            <div th:if="${order.status.name() == 'CHO_XAC_NHAN'}" class="payment-success-msg">
+                <div class="success-icon-wrap">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <h3>Tuyệt vời! Chúng tôi đã nhận được thanh toán.</h3>
+                <p>Mã đơn hàng: <strong th:text="'#' + ${order.id}">#1</strong></p>
+                <div class="payment-actions mt-4">
+                    <a th:href="@{/account/orders}" class="btn btn-hero-solid w-100">Xem danh sách đơn hàng</a>
+                    <a th:href="@{/}" class="btn btn-ghost w-100 mt-2">Tiếp tục mua sắm</a>
+                </div>
+                <script>
+                    // Chuyển hướng sau 5 giây nếu đã thành công
+                    setTimeout(() => {
+                        window.location.href = '/account/orders';
+                    }, 5000);
+                </script>
+            </div>
+
+            <!-- PENDING STATE (QR) -->
+            <div th:if="${order.status.name() == 'CHO_THANH_TOAN'}" class="payment-main-grid">
                 <!-- QR Part -->
                 <div class="payment-qr-wrap">
                     <div class="qr-container">
@@ -69,7 +91,7 @@
                 </div>
             </div>
 
-            <div class="payment-footer-note">
+            <div class="payment-footer-note" th:if="${order.status.name() == 'CHO_THANH_TOAN'}">
                 <p>Mọi thắc mắc vui lòng liên hệ Hotline: <strong>0123.456.789</strong></p>
             </div>
         </div>
@@ -178,6 +200,31 @@
     .luxury-hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
     .bank-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem; }
     
+    /* SUCCESS STATE STYLES */
+    .payment-success-msg {
+        text-align: center;
+        padding: 40px 0;
+        animation: fadeIn 0.8s ease;
+    }
+    .success-icon-wrap {
+        margin-bottom: 24px;
+        background: #f0fdf4;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: auto;
+        margin-right: auto;
+        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.15);
+    }
+    .luxury-badge.success {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
     @media (max-width: 768px) {
         .payment-main-grid { grid-template-columns: 1fr; gap: 30px; }
         .payment-card-luxury { padding: 25px; }

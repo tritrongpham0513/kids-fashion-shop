@@ -38,6 +38,7 @@
           <option th:each="c : ${categories}" th:value="${c.id}" th:selected="${product.category != null and product.category.id == c.id}"
                   th:text="${c.name}">Tên</option>
         </select>
+      </label>
       <label class="field" style="grid-column: 1 / -1;">Chọn các Size hiện có
         <input type="hidden" th:field="*{sizes}" id="sizes-hidden-input"/>
         <div class="size-selection-grid">
