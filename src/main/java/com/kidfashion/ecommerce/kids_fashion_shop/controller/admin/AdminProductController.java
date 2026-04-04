@@ -17,6 +17,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.kidfashion.ecommerce.kids_fashion_shop.model.Category;
 import com.kidfashion.ecommerce.kids_fashion_shop.model.Product;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.CategoryService;
+import com.kidfashion.ecommerce.kids_fashion_shop.service.FileStorageService;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.ProductService;
 
 @Controller
@@ -25,10 +26,14 @@ public class AdminProductController {
 
 	private final ProductService productService;
 	private final CategoryService categoryService;
+	private final FileStorageService fileStorageService;
 
-	public AdminProductController(ProductService productService, CategoryService categoryService) {
+	public AdminProductController(ProductService productService, 
+	                            CategoryService categoryService,
+	                            FileStorageService fileStorageService) {
 		this.productService = productService;
 		this.categoryService = categoryService;
+		this.fileStorageService = fileStorageService;
 	}
 
 	@GetMapping("")
@@ -53,12 +58,37 @@ public class AdminProductController {
 	}
 
 	@PostMapping("/save")
-	public String save(@ModelAttribute("product") Product product, @RequestParam("categoryId") Long categoryId) {
-		Optional<Category> cat = this.categoryService.findById(categoryId);
-		if (cat.isPresent()) {
-			product.setCategory(cat.get());
+	public String save(@ModelAttribute("product") Product product, 
+	                   @RequestParam(value = "categoryId", required = false) Long categoryId,
+	                   @RequestParam(value = "imageFile", required = false) org.springframework.web.multipart.MultipartFile imageFile,
+	                   RedirectAttributes redirectAttributes) {
+		
+		boolean isNew = (product.getId() == null);
+		
+		// Handle Image Upload
+		if (imageFile != null && !imageFile.isEmpty()) {
+			try {
+				String imageUrl = this.fileStorageService.saveFile(imageFile);
+				product.setImageUrl(imageUrl);
+			} catch (java.io.IOException e) {
+				redirectAttributes.addFlashAttribute("errorMessage", "Lỗi tải tệp: " + e.getMessage());
+				return isNew ? "redirect:/admin/products/new" : "redirect:/admin/products/" + product.getId() + "/edit";
+			}
 		}
-		if (product.getId() != null) {
+
+		if (categoryId != null && categoryId > 0) {
+			Optional<Category> cat = this.categoryService.findById(categoryId);
+			if (cat.isPresent()) {
+				product.setCategory(cat.get());
+			} else {
+				product.setCategory(null);
+			}
+		} else {
+			this.productService.repairSchema();
+			product.setCategory(null);
+		}
+		
+		if (!isNew) {
 			Optional<Product> existing = this.productService.findById(product.getId());
 			if (existing.isPresent()) {
 				Product e = existing.get();
@@ -67,16 +97,28 @@ public class AdminProductController {
 				product.setSearchImpressionCount(e.getSearchImpressionCount());
 				product.setSearchClickCount(e.getSearchClickCount());
 				product.setHotScore(e.getHotScore());
+				
+				// Handle Image URL if no new upload and the URL field is empty/blank
+				if ((product.getImageUrl() == null || product.getImageUrl().isBlank()) && e.getImageUrl() != null) {
+					product.setImageUrl(e.getImageUrl());
+				}
 			} else {
 				product.setCreatedAt(LocalDateTime.now());
 			}
 		} else {
 			product.setCreatedAt(LocalDateTime.now());
 		}
-		if (product.getAdminHot() == null) {
-			product.setAdminHot(Boolean.FALSE);
-		}
+		
+		// Ensure Boolean flags are not null for new products
+		if (product.getNewArrival() == null) product.setNewArrival(Boolean.FALSE);
+		if (product.getBestSeller() == null) product.setBestSeller(Boolean.FALSE);
+		if (product.getAdminHot() == null) product.setAdminHot(Boolean.FALSE);
+		
 		this.productService.save(product);
+		
+		String msg = isNew ? "Đã thêm sản phẩm mới thành công!" : "Đã cập nhật thông tin sản phẩm thành công!";
+		redirectAttributes.addFlashAttribute("successMessage", msg);
+		
 		return "redirect:/admin/products";
 	}
 

@@ -92,7 +92,6 @@
         </a>
 
         <span sec:authorize="isAnonymous()" class="header-auth">
-          <a class="btn-nav btn-nav-ghost" th:href="@{/register}">Đăng ký</a>
           <a class="btn-nav btn-nav-login" th:href="@{/login}">Đăng nhập</a>
         </span>
 
@@ -102,8 +101,10 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               <span class="account-text">
                 <span class="account-label">Tài khoản</span>
-                <span class="account-sub" sec:authorize="hasRole('ADMIN')">Admin</span>
-                <span class="account-sub" sec:authorize="hasRole('CUSTOMER')">Của tôi</span>
+                <span class="account-sub"
+                      th:with="u=${#authentication.principal.appUser}"
+                      th:text="${not #strings.isEmpty(u.fullName)} ? ${u.fullName} : ${u.email}"
+                      th:title="${not #strings.isEmpty(u.fullName)} ? ${u.fullName} : ${u.email}">Tên</span>
               </span>
             </div>
             <div class="nav-dropdown-content nav-dropdown-right">
@@ -224,6 +225,7 @@
       });
     });
   </script>
+  <script defer th:src="@{/js/password-toggle.js}"></script>
 </footer>
 </body>
 </html>

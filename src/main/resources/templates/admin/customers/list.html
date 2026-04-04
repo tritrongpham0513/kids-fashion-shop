@@ -6,30 +6,94 @@
 <main class="container admin-shell">
   <aside th:replace="~{fragments/admin-nav :: sidebar}"></aside>
   <section>
-    <h1 style="margin-top:0">Khách hàng</h1>
+    <div class="section-head">
+      <h1>Khách hàng</h1>
+    </div>
+    
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
     <div class="table-wrap">
       <table class="data-table">
         <thead>
-        <tr><th>Họ tên</th><th>Email</th><th>Điện thoại</th><th></th></tr>
+        <tr><th>Họ tên</th><th>Email</th><th>Điện thoại</th><th>Thao tác</th></tr>
         </thead>
         <tbody>
         <tr th:each="u : ${customers}">
           <td th:text="${u.fullName}">Tên</td>
           <td th:text="${u.email}">mail</td>
           <td th:text="${u.phone}">sdt</td>
-          <td class="pill-row">
-            <a class="btn btn-sm btn-ghost" th:href="@{'/admin/customers/' + ${u.id} + '/edit'}">Sửa</a>
-            <form th:action="@{'/admin/customers/' + ${u.id} + '/delete'}" method="post" style="display:inline">
+          <td>
+            <div class="pill-row">
+              <a class="btn btn-edit-luxury" th:href="@{/admin/customers/{id}/edit(id=${u.id})}">Sửa</a>
+              <button type="button" class="btn btn-delete-luxury" 
+                      th:data-id="${u.id}" th:data-name="${u.fullName}" onclick="openDeleteModal(this)">Xóa</button>
+            </div>
+            <form th:id="'delete-form-' + ${u.id}" th:action="@{'/admin/customers/' + ${u.id} + '/delete'}" method="post" style="display:none">
               <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-              <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Xóa khách hàng?');">Xóa</button>
             </form>
           </td>
         </tr>
         </tbody>
       </table>
     </div>
+
+    <!-- Custom Luxury Confirm Modal -->
+    <div id="confirm-modal" class="modal">
+      <div class="modal-content confirm-card">
+        <div class="modal-header">
+          <h3 style="margin:0; color: var(--text);">Xác nhận khóa/xóa</h3>
+          <button class="modal-close" onclick="closeConfirm()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Bạn có chắc chắn muốn xóa tài khoản của khách hàng <strong id="delete-item-name">này</strong> không? Mọi thông tin liên quan sẽ bị gỡ bỏ.</p>
+        </div>
+        <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+          <button class="btn btn-ghost" onclick="closeConfirm()">Hủy bỏ</button>
+          <button id="confirm-delete-btn" class="btn btn-danger">Xác nhận xóa</button>
+        </div>
+      </div>
+    </div>
   </section>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script>
+  let currentDeleteId = null;
+
+  function openDeleteModal(btn) {
+    currentDeleteId = btn.getAttribute('data-id');
+    document.getElementById('delete-item-name').innerText = btn.getAttribute('data-name');
+    document.getElementById('confirm-modal').classList.add('active');
+  }
+
+  function closeConfirm() {
+    document.getElementById('confirm-modal').classList.remove('active');
+    currentDeleteId = null;
+  }
+
+  document.getElementById('confirm-delete-btn').addEventListener('click', () => {
+    if (currentDeleteId) {
+      document.getElementById('delete-form-' + currentDeleteId).submit();
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Auto-fade alerts
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+      setTimeout(() => {
+        alert.classList.add('fade-out');
+        setTimeout(() => alert.remove(), 400);
+      }, 3000);
+    });
+  });
+
+  // Close modal on outside click
+  window.addEventListener('click', (e) => {
+    const modal = document.getElementById('confirm-modal');
+    if (e.target === modal) closeConfirm();
+  });
+</script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 package com.kidfashion.ecommerce.kids_fashion_shop.controller.admin;
 
 import java.util.Optional;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -42,7 +43,7 @@ public class AdminCustomerController {
 	}
 
 	@PostMapping("/save")
-	public String save(@ModelAttribute("customer") AppUser formUser) {
+	public String save(@ModelAttribute("customer") AppUser formUser, RedirectAttributes redirectAttributes) {
 		Optional<AppUser> existing = this.appUserService.findById(formUser.getId());
 		if (existing.isEmpty()) {
 			return "redirect:/admin/customers";
@@ -55,12 +56,16 @@ public class AdminCustomerController {
 		u.setPhone(formUser.getPhone());
 		u.setAddress(formUser.getAddress());
 		this.appUserService.save(u);
+		
+		redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật thông tin khách hàng thành công!");
+		
 		return "redirect:/admin/customers";
 	}
 
 	@PostMapping("/{id}/delete")
-	public String delete(@PathVariable("id") Long id) {
+	public String delete(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
 		this.appUserService.deleteCustomerById(id);
+		redirectAttributes.addFlashAttribute("successMessage", "Đã xóa tài khoản khách hàng khỏi hệ thống.");
 		return "redirect:/admin/customers";
 	}
 }

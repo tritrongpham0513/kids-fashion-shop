@@ -1,7 +1,6 @@
 package com.kidfashion.ecommerce.kids_fashion_shop.service;
 
 import com.kidfashion.ecommerce.kids_fashion_shop.model.Category;
-import com.kidfashion.ecommerce.kids_fashion_shop.model.Product;
 import com.kidfashion.ecommerce.kids_fashion_shop.repository.CategoryRepository;
 import com.kidfashion.ecommerce.kids_fashion_shop.repository.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -15,13 +14,13 @@ public class CategoryService {
 
 	private final CategoryRepository categoryRepository;
 	private final ProductRepository productRepository;
-	private final HotScoreService hotScoreService;
+	private final jakarta.persistence.EntityManager entityManager;
 
-	public CategoryService(CategoryRepository categoryRepository, ProductRepository productRepository,
-			HotScoreService hotScoreService) {
+	public CategoryService(CategoryRepository categoryRepository, ProductRepository productRepository, 
+	                       jakarta.persistence.EntityManager entityManager) {
 		this.categoryRepository = categoryRepository;
 		this.productRepository = productRepository;
-		this.hotScoreService = hotScoreService;
+		this.entityManager = entityManager;
 	}
 
 	@Transactional(readOnly = true)
@@ -57,7 +56,19 @@ public class CategoryService {
 
 	@Transactional
 	public void deleteById(Long id) {
+		// 1. Force the database schema to allow NULL (in case Hibernate didn't do it)
+		this.productRepository.repairSchemaForNullableCategory();
+		
+		// 2. Unlink products using Native SQL (bypasses Hibernate's entity state)
+		this.productRepository.setCategoryToNullByCategoryId(id);
+		
+		// 3. Clear persistence context to ensure Hibernate doesn't have stale category references
+		this.entityManager.flush();
+		this.entityManager.clear();
+		
+		// 4. Finally delete the category
 		this.categoryRepository.deleteById(id);
+		this.categoryRepository.flush();
 	}
 
 	@Transactional(readOnly = true)
@@ -68,28 +79,4 @@ public class CategoryService {
 		return this.productRepository.countByCategoryId(categoryId);
 	}
 
-	@Transactional
-	public void reassignProductsAndDeleteCategory(Long sourceCategoryId, Long targetCategoryId) {
-		if (sourceCategoryId == null || targetCategoryId == null) {
-			throw new IllegalArgumentException("Thiếu danh mục nguồn/đích.");
-		}
-		if (sourceCategoryId.equals(targetCategoryId)) {
-			throw new IllegalArgumentException("Danh mục đích phải khác danh mục cần xóa.");
-		}
-		Category source = this.categoryRepository.findById(sourceCategoryId)
-				.orElseThrow(() -> new IllegalArgumentException("Không tìm thấy danh mục cần xóa."));
-		Category target = this.categoryRepository.findById(targetCategoryId)
-				.orElseThrow(() -> new IllegalArgumentException("Không tìm thấy danh mục đích."));
-
-		List<Product> products = this.productRepository.findByCategoryIdOrderByCreatedAtDesc(sourceCategoryId);
-		for (int i = 0; i < products.size(); i++) {
-			Product p = products.get(i);
-			p.setCategory(target);
-			this.productRepository.save(p);
-			if (p.getId() != null) {
-				this.hotScoreService.recalculateProduct(p.getId());
-			}
-		}
-		this.categoryRepository.delete(source);
-	}
 }

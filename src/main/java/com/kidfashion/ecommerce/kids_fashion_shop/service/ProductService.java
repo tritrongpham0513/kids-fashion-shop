@@ -118,6 +118,11 @@ public class ProductService {
 	}
 
 	@Transactional
+	public void repairSchema() {
+		this.productRepository.repairSchemaForNullableCategory();
+	}
+
+	@Transactional
 	public void deleteById(Long id) {
 		if (id == null) {
 			return;

@@ -7,9 +7,16 @@
   <aside th:replace="~{fragments/admin-nav :: sidebar}"></aside>
   <section>
     <div class="section-head">
-      <h1 style="margin:0">Mã giảm giá</h1>
-      <a class="btn btn-sm" th:href="@{/admin/discounts/new}">Thêm</a>
+      <h1>Mã giảm giá</h1>
+      <a class="btn btn-sm btn-success" th:href="@{/admin/discounts/new}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Thêm mới
+      </a>
     </div>
+    
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
     <div class="table-wrap">
       <table class="data-table">
         <thead>
@@ -31,19 +38,79 @@
           <td th:text="${d.expiryDate != null} ? ${#temporals.format(d.expiryDate, 'dd/MM/yyyy')} : '-'">-</td>
           <td th:text="${d.active} ? 'Có' : 'Không'">C</td>
           <td th:text="${d.usedCount} + (${d.maxUses != null} ? ' / ' + ${d.maxUses} : '')">0</td>
-          <td class="pill-row">
-            <a class="btn btn-sm btn-ghost" th:href="@{'/admin/discounts/' + ${d.id} + '/edit'}">Sửa</a>
-            <form th:action="@{'/admin/discounts/' + ${d.id} + '/delete'}" method="post" style="display:inline">
+          <td>
+            <div class="pill-row">
+              <a class="btn btn-edit-luxury" th:href="@{/admin/discounts/{id}/edit(id=${d.id})}">Sửa</a>
+              <button type="button" class="btn btn-delete-luxury" 
+                      th:data-id="${d.id}" 
+                      th:data-name="${d.code}"
+                      onclick="openDeleteModal(this)">Xóa</button>
+            </div>
+            <form th:id="'delete-form-' + ${d.id}" th:action="@{'/admin/discounts/' + ${d.id} + '/delete'}" method="post" style="display:none">
               <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-              <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Xóa mã này?');">Xóa</button>
             </form>
           </td>
         </tr>
         </tbody>
       </table>
     </div>
+
+    <!-- Custom Luxury Confirm Modal -->
+    <div id="confirm-modal" class="modal">
+      <div class="modal-content confirm-card">
+        <div class="modal-header">
+          <h3 style="margin:0; color: var(--text);">Xác nhận xóa</h3>
+          <button class="modal-close" onclick="closeConfirm()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Bạn có chắc chắn muốn xóa mã giảm giá <strong id="delete-item-name">này</strong> không? Hành động này không thể hoàn tác.</p>
+        </div>
+        <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+          <button class="btn btn-ghost" onclick="closeConfirm()">Hủy bỏ</button>
+          <button id="confirm-delete-btn" class="btn btn-danger">Xóa ngay</button>
+        </div>
+      </div>
+    </div>
   </section>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script>
+  let currentDeleteId = null;
+
+  function openDeleteModal(btn) {
+    currentDeleteId = btn.getAttribute('data-id');
+    document.getElementById('delete-item-name').innerText = btn.getAttribute('data-name');
+    document.getElementById('confirm-modal').classList.add('active');
+  }
+
+  function closeConfirm() {
+    document.getElementById('confirm-modal').classList.remove('active');
+    currentDeleteId = null;
+  }
+
+  document.getElementById('confirm-delete-btn').addEventListener('click', () => {
+    if (currentDeleteId) {
+      document.getElementById('delete-form-' + currentDeleteId).submit();
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Auto-fade alerts
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+      setTimeout(() => {
+        alert.classList.add('fade-out');
+        setTimeout(() => alert.remove(), 400);
+      }, 3000);
+    });
+  });
+
+  // Close modal on outside click
+  window.addEventListener('click', (e) => {
+    const modal = document.getElementById('confirm-modal');
+    if (e.target === modal) closeConfirm();
+  });
+</script>
 </body>
 </html>

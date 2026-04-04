@@ -66,8 +66,15 @@ public class Product {
 	private LocalDateTime createdAt;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "category_id", nullable = false)
+	@JoinColumn(name = "category_id", nullable = true)
+	@org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.SET_NULL)
 	private Category category;
+
+	@Column(name = "sizes", length = 500)
+	private String sizes;
+
+	@Column(name = "colors", length = 500)
+	private String colors;
 
 	public Product() {
 		this.newArrival = Boolean.FALSE;
@@ -197,5 +204,21 @@ public class Product {
 
 	public void setCategory(Category category) {
 		this.category = category;
+	}
+
+	public String getSizes() {
+		return sizes;
+	}
+
+	public void setSizes(String sizes) {
+		this.sizes = sizes;
+	}
+
+	public String getColors() {
+		return colors;
+	}
+
+	public void setColors(String colors) {
+		this.colors = colors;
 	}
 }

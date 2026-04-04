@@ -40,6 +40,8 @@
           <thead>
           <tr>
             <th>Sản phẩm</th>
+            <th style="text-align: center;">Màu</th>
+            <th style="text-align: center;">Size</th>
             <th style="text-align: center;">Số lượng</th>
             <th style="text-align: right;">Đơn giá</th>
             <th style="text-align: right;">Tạm tính</th>
@@ -47,18 +49,9 @@
           </thead>
           <tbody>
           <tr th:each="line : ${order.lines}">
-            <td>
-              <div style="font-weight: 600; color: var(--text);" th:text="${line.product.name}">Tên sản phẩm</div>
-              <div style="font-size: 0.8rem; color: var(--muted); margin-top: 4px;"
-                   th:with="hasC=${line.colorLabel != null and !#strings.isEmpty(line.colorLabel)}, hasS=${line.sizeLabel != null and !#strings.isEmpty(line.sizeLabel)}">
-                <span th:if="${hasC or hasS}">
-                  <span th:if="${hasC}">Màu: <span th:text="${line.colorLabel}"></span></span>
-                  <span th:if="${hasC and hasS}"> · </span>
-                  <span th:if="${hasS}">Size: <span th:text="${line.sizeLabel}"></span></span>
-                </span>
-                <span th:if="${!hasC and !hasS}">Phân loại: Mặc định</span>
-              </div>
-            </td>
+            <td style="font-weight: 600; color: var(--text);" th:text="${line.product.name}">Tên sản phẩm</td>
+            <td style="text-align: center;" th:text="${(line.colorLabel != null and !#strings.isEmpty(line.colorLabel)) ? line.colorLabel : '-'}">Màu</td>
+            <td style="text-align: center;" th:text="${(line.sizeLabel != null and !#strings.isEmpty(line.sizeLabel)) ? line.sizeLabel : '-'}">Size</td>
             <td style="text-align: center;" th:text="${line.quantity}">1</td>
             <td style="text-align: right;" th:text="${#numbers.formatDecimal(line.unitPrice, 0, 'POINT', 0, 'COMMA')} + ' đ'">0</td>
             <td style="text-align: right; font-weight: 600;" th:text="${#numbers.formatDecimal(line.lineTotal, 0, 'POINT', 0, 'COMMA')} + ' đ'">0</td>

@@ -4,7 +4,6 @@ import java.util.Optional;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
@@ -77,57 +76,14 @@ public class AdminCategoryController {
 		return "admin/categories/form";
 	}
 
-	@GetMapping("/{id}/delete-confirm")
-	public String deleteConfirm(@PathVariable("id") Long id, Model model) {
-		Optional<Category> opt = this.categoryService.findById(id);
-		if (opt.isEmpty()) {
-			return "redirect:/admin/categories";
-		}
-		Category category = opt.get();
-		long productCount = this.categoryService.countProductsByCategoryId(id);
-		List<Category> others = new ArrayList<>();
-		for (Category c : this.categoryService.findAllSortedByName()) {
-			if (!c.getId().equals(id)) {
-				others.add(c);
-			}
-		}
-		model.addAttribute("category", category);
-		model.addAttribute("productCount", productCount);
-		model.addAttribute("otherCategories", others);
-		model.addAttribute("pageTitle", "Xóa danh mục");
-		return "admin/categories/delete-confirm";
-	}
-
 	@PostMapping("/{id}/delete")
 	public String delete(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
-		if (this.categoryService.countProductsByCategoryId(id) > 0) {
-			redirectAttributes.addFlashAttribute("errorMessage",
-					"Danh mục vẫn còn sản phẩm. Dùng bước chuyển sản phẩm rồi xóa.");
-			return "redirect:/admin/categories/" + id + "/delete-confirm";
-		}
 		try {
 			this.categoryService.deleteById(id);
-			redirectAttributes.addFlashAttribute("successMessage", "Đã xóa danh mục.");
+			redirectAttributes.addFlashAttribute("successMessage", "Đã xóa danh mục thành công.");
 		} catch (DataIntegrityViolationException ex) {
 			redirectAttributes.addFlashAttribute("errorMessage",
-					"Không xóa được do dữ liệu liên quan. Thử lại sau khi gỡ sản phẩm.");
-		}
-		return "redirect:/admin/categories";
-	}
-
-	@PostMapping("/{id}/delete-with-move")
-	public String deleteWithMove(@PathVariable("id") Long id,
-			@org.springframework.web.bind.annotation.RequestParam("targetCategoryId") Long targetCategoryId,
-			RedirectAttributes redirectAttributes) {
-		try {
-			this.categoryService.reassignProductsAndDeleteCategory(id, targetCategoryId);
-			redirectAttributes.addFlashAttribute("successMessage",
-					"Đã chuyển sản phẩm sang danh mục mới và xóa danh mục cũ.");
-		} catch (IllegalArgumentException ex) {
-			redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-		} catch (DataIntegrityViolationException ex) {
-			redirectAttributes.addFlashAttribute("errorMessage",
-					"Không thể chuyển/xóa danh mục do ràng buộc dữ liệu.");
+					"Không xóa được danh mục do có dữ liệu ràng buộc không thể gỡ bỏ. Vui lòng kiểm tra lại.");
 		}
 		return "redirect:/admin/categories";
 	}

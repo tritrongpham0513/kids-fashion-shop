@@ -1,6 +1,7 @@
 package com.kidfashion.ecommerce.kids_fashion_shop.controller.admin;
 
 import java.util.Optional;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -39,8 +40,13 @@ public class AdminDiscountController {
 	}
 
 	@PostMapping("/save")
-	public String save(@ModelAttribute("discount") DiscountCode discount) {
+	public String save(@ModelAttribute("discount") DiscountCode discount, RedirectAttributes redirectAttributes) {
+		boolean isNew = (discount.getId() == null);
 		this.discountCodeService.save(discount);
+		
+		String msg = isNew ? "Đã tạo mã giảm giá mới thành công!" : "Đã cập nhật mã giảm giá thành công!";
+		redirectAttributes.addFlashAttribute("successMessage", msg);
+		
 		return "redirect:/admin/discounts";
 	}
 
@@ -56,8 +62,9 @@ public class AdminDiscountController {
 	}
 
 	@PostMapping("/{id}/delete")
-	public String delete(@PathVariable("id") Long id) {
+	public String delete(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
 		this.discountCodeService.deleteById(id);
+		redirectAttributes.addFlashAttribute("successMessage", "Đã xóa mã giảm giá thành công.");
 		return "redirect:/admin/discounts";
 	}
 }

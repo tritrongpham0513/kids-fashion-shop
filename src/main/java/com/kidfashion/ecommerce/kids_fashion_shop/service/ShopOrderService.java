@@ -49,7 +49,7 @@ public class ShopOrderService {
 
 	@Transactional
 	public ShopOrder placeOrder(Long customerId, List<CartLineDto> cartLines, String discountCodeRaw,
-			String shippingAddressRaw) {
+			String shippingAddressRaw, String paymentMethod) {
 		Optional<AppUser> customerOpt = this.appUserService.findById(customerId);
 		if (customerOpt.isEmpty()) {
 			throw new IllegalStateException("Không tìm thấy khách hàng.");
@@ -68,6 +68,7 @@ public class ShopOrderService {
 		order.setCustomer(customer);
 		order.setStatus(OrderStatus.CHO_XAC_NHAN);
 		order.setShippingAddress(shippingAddress);
+		order.setPaymentMethod(paymentMethod != null ? paymentMethod : "COD");
 		order.setCreatedAt(LocalDateTime.now());
 
 		BigDecimal subtotal = BigDecimal.ZERO;

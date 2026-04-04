@@ -73,53 +73,85 @@
           <span class="discount-badge">-20%</span>
         </div>
 
-        <!-- MOCK: Color Selection -->
-        <div class="attribute-section">
-          <div class="attribute-label">Màu sắc: <span class="val" id="selected-color">Sage Green</span></div>
-          <div class="color-swatch-list">
-            <div class="color-swatch active" style="background: #5b6d5b;" onclick="selectColor(this, 'Sage Green')"></div>
-            <div class="color-swatch" style="background: #d2b48c;" onclick="selectColor(this, 'Sand')"></div>
-            <div class="color-swatch" style="background: #a0522d;" onclick="selectColor(this, 'Terracotta')"></div>
-            <div class="color-swatch" style="background: #ffffff;" onclick="selectColor(this, 'White')"></div>
-          </div>
-        </div>
-
-        <!-- MOCK: Size Selection -->
-        <div class="attribute-section">
-          <div class="attribute-label">
-            Kích cỡ
-            <a href="#" class="link">Hướng dẫn chọn size</a>
-          </div>
-          <div class="size-pill-list">
-            <div class="size-pill" onclick="selectSize(this)">6-12M</div>
-            <div class="size-pill active" onclick="selectSize(this)">1-2Y</div>
-            <div class="size-pill" onclick="selectSize(this)">2-3Y</div>
-            <div class="size-pill" onclick="selectSize(this)">3-4Y</div>
-          </div>
-        </div>
-        
-        <form th:action="@{/cart/add}" method="post">
+        <form th:action="@{/cart/add}" method="post" id="purchase-form">
           <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
           <input type="hidden" name="productId" th:value="${product.id}"/>
-          <input type="hidden" name="colorLabel" id="input-color-label" value="Sage Green"/>
-          <input type="hidden" name="sizeLabel" id="input-size-label" value="1-2Y"/>
-          
-          <div class="attribute-section" style="margin-top: 32px;">
-            <label class="qty-label">Số lượng</label>
-            <div class="qty-selector">
-              <button type="button" class="qty-btn" onclick="let i = document.getElementById('qty'); if(i.value>1) i.value--;">-</button>
-              <input type="number" id="qty" class="qty-input" name="quantity" value="1" min="1" th:attr="max=${product.stockQuantity}"/>
-              <button type="button" class="qty-btn" th:attr="onclick='let i = document.getElementById(\'qty\'); if(i.value<'+${product.stockQuantity}+') i.value++;'">+</button>
+
+          <!-- Dynamic Color Selection (Sync) -->
+          <div class="attribute-section" th:if="${product.colors != null and !#strings.isEmpty(product.colors)}">
+            <div class="attribute-label">Màu sắc: <span class="val" id="selected-color" th:text="${#strings.arraySplit(product.colors, ',')[0].trim()}"></span></div>
+            <div class="color-swatch-list">
+              <th:block th:each="colorStr, iter : ${#strings.arraySplit(product.colors, ',')}">
+                <label class="color-swatch-label">
+                  <input type="radio" name="colorLabel" th:value="${colorStr.trim()}" th:checked="${iter.first}" 
+                         style="display:none;" onchange="document.getElementById('selected-color').innerText = this.value"/>
+                  <div class="color-swatch">
+                    <span th:text="${colorStr.trim()}">Màu</span>
+                    <span class="color-dot" th:style="'background: ' + ${
+                      colorStr.trim().toLowerCase().contains('trắng') ? '#ffffff' : 
+                      (colorStr.trim().toLowerCase().contains('đen') ? '#000000' : 
+                      (colorStr.trim().toLowerCase().contains('hồng') ? '#ff8fab' : 
+                      (colorStr.trim().toLowerCase().contains('đỏ') ? '#ee4d2d' : 
+                      (colorStr.trim().toLowerCase().contains('xanh') ? '#2d88ff' : 
+                      (colorStr.trim().toLowerCase().contains('vàng') ? '#fcc419' : 
+                      (colorStr.trim().toLowerCase().contains('xám') ? '#8e8e93' : 'transparent'))))))
+                    }"></span>
+                  </div>
+                </label>
+              </th:block>
+            </div>
+          </div>
+
+          <!-- Size Selection Area -->
+          <div class="attribute-section">
+            <div class="attribute-label">
+              Kích cỡ
+              <a href="javascript:void(0)" class="link" id="open-size-guide" style="margin-left: auto;">Hướng dẫn chọn size</a>
+            </div>
+            <div class="size-pill-list" th:if="${product.sizes != null and !#strings.isEmpty(product.sizes)}">
+              <th:block th:each="sizeStr, iter : ${#strings.arraySplit(product.sizes, ',')}">
+                <label class="size-pill-label">
+                  <input type="radio" name="sizeLabel" th:value="${sizeStr.trim()}" th:checked="${iter.first}" style="display:none;"/>
+                  <div class="size-pill" th:text="${sizeStr.trim()}">Size</div>
+                </label>
+              </th:block>
+            </div>
+            <div th:unless="${product.sizes != null and !#strings.isEmpty(product.sizes)}" class="muted" style="font-size: 0.85rem; margin-top: 8px;">
+              Sản phẩm này hiện có một kích cỡ duy nhất hoặc liên hệ để được tư vấn.
             </div>
           </div>
           
-          <div class="action-btns">
-            <button type="submit" class="btn-cart" style="margin-top: 0;">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-              Thêm vào giỏ hàng
-            </button>
-            <button type="submit" th:formaction="@{/cart/buy-now}" class="btn-buy">Mua ngay</button>
-          </div>
+          <!-- Stock Control: In Stock vs Out of Stock -->
+          <th:block th:if="${product.stockQuantity > 0}">
+            <div class="attribute-section" style="margin-top: 32px;">
+              <label class="qty-label">Số lượng</label>
+              <div class="qty-selector">
+                <button type="button" class="qty-btn" onclick="let i = document.getElementById('qty'); if(i.value>1) i.value--;">-</button>
+                <input type="number" id="qty" class="qty-input" name="quantity" value="1" min="1" th:attr="max=${product.stockQuantity}"/>
+                <button type="button" class="qty-btn" th:attr="onclick='let i = document.getElementById(\'qty\'); if(i.value<'+${product.stockQuantity}+') i.value++;'">+</button>
+              </div>
+            </div>
+            
+            <div class="action-btns">
+              <button type="submit" class="btn-cart" style="margin-top: 0;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                Thêm vào giỏ hàng
+              </button>
+              <button type="submit" th:formaction="@{/cart/buy-now}" class="btn-buy">Mua ngay</button>
+            </div>
+          </th:block>
+
+          <!-- Out of Stock Message -->
+          <th:block th:unless="${product.stockQuantity > 0}">
+            <div class="out-of-stock-alert">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+              <span>Sản phẩm này hiện đã hết hàng</span>
+            </div>
+            <div class="action-btns">
+              <button type="button" class="btn-buy" style="background: var(--muted); cursor: not-allowed;" disabled>Hết hàng</button>
+              <a th:href="@{/}" class="btn-cart" style="margin-top: 0; text-align: center; justify-content: center;">Xem sản phẩm khác</a>
+            </div>
+          </th:block>
         </form>
 
         <div class="trust-badge-grid">
@@ -270,6 +302,72 @@
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 
+<!-- Size Guide Modal -->
+<div id="size-guide-modal" class="modal">
+  <div class="modal-content size-guide-card">
+    <div class="modal-header">
+      <h3>Hướng dẫn chọn size cho bé</h3>
+      <button class="modal-close" id="close-size-guide">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="guide-note">Số đo có thể chênh lệch 1-2cm tùy mẫu mã. Nếu bé có bụng hoặc mông to, vui lòng chọn tăng 1 size.</p>
+      <div class="table-responsive">
+        <table class="size-table">
+          <thead>
+            <tr>
+              <th>Size</th>
+              <th>Độ tuổi</th>
+              <th>Chiều cao (cm)</th>
+              <th>Cân nặng (kg)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1-2Y</td>
+              <td>12 - 24 tháng</td>
+              <td>80 - 90</td>
+              <td>9 - 12</td>
+            </tr>
+            <tr>
+              <td>2-3Y</td>
+              <td>2 - 3 tuổi</td>
+              <td>90 - 100</td>
+              <td>12 - 15</td>
+            </tr>
+            <tr>
+              <td>3-4Y</td>
+              <td>3 - 4 tuổi</td>
+              <td>100 - 110</td>
+              <td>15 - 18</td>
+            </tr>
+            <tr>
+              <td>4-5Y</td>
+              <td>4 - 5 tuổi</td>
+              <td>110 - 120</td>
+              <td>18 - 21</td>
+            </tr>
+            <tr>
+              <td>5-6Y</td>
+              <td>5 - 6 tuổi</td>
+              <td>120 - 130</td>
+              <td>21 - 25</td>
+            </tr>
+            <tr>
+              <td>6-7Y</td>
+              <td>6 - 7 tuổi</td>
+              <td>130 - 140</td>
+              <td>25 - 30</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="guide-footer">
+        <p>Nếu bạn vẫn phân vân, hãy nhắn tin ngay cho KidFashion để được tư vấn nhé!</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   function toggleAcc(el) {
     el.classList.toggle('active');
@@ -283,21 +381,6 @@
       content.style.maxHeight = '500px'; 
       content.style.paddingBottom = '24px';
     }
-  }
-
-  function selectColor(el, name) {
-    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('selected-color').innerText = name;
-    var c = document.getElementById('input-color-label');
-    if (c) c.value = name;
-  }
-
-  function selectSize(el) {
-    document.querySelectorAll('.size-pill').forEach(s => s.classList.remove('active'));
-    el.classList.add('active');
-    var s = document.getElementById('input-size-label');
-    if (s) s.value = (el.textContent || '').trim();
   }
 
   function initStarRating(container) {
@@ -353,11 +436,37 @@
     });
   }
 
+  // Size Guide Modal Logic
+  const sizeModal = document.getElementById('size-guide-modal');
+  const openSizeBtn = document.getElementById('open-size-guide');
+  const closeSizeBtn = document.getElementById('close-size-guide');
+
+  if (openSizeBtn && sizeModal) {
+    openSizeBtn.addEventListener('click', () => {
+      sizeModal.classList.add('active');
+      document.body.style.overflow = 'hidden'; // Prevent scrolling
+    });
+  }
+
+  if (closeSizeBtn && sizeModal) {
+    closeSizeBtn.addEventListener('click', () => {
+      sizeModal.classList.remove('active');
+      document.body.style.overflow = '';
+    });
+  }
+
+  // Close modal when clicking outside content
+  window.addEventListener('click', (e) => {
+    if (e.target === sizeModal) {
+      sizeModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
+
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.star-rating').forEach(initStarRating);
     document.querySelectorAll('.review-stars-inline').forEach(syncReviewStars);
   });
 </script>
-
 </body>
 </html>

@@ -6,11 +6,17 @@
 <main class="container admin-shell">
   <aside th:replace="~{fragments/admin-nav :: sidebar}"></aside>
   <section>
-    <h1 style="margin-top:0">Đơn hàng</h1>
+    <div class="section-head">
+      <h1>Đơn hàng</h1>
+    </div>
+    
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
     <div class="table-wrap">
       <table class="data-table">
         <thead>
-        <tr><th>Mã</th><th>Khách</th><th>Ngày</th><th>Trạng thái</th><th>Tổng</th><th></th></tr>
+        <tr><th>Mã</th><th>Khách</th><th>Ngày</th><th>Trạng thái</th><th>Tổng</th><th>Thao tác</th></tr>
         </thead>
         <tbody>
         <tr th:each="o : ${orders}">
@@ -23,29 +29,88 @@
                    th:text="${o.status.displayName}">S</span>
            </td>
            <td th:text="${#numbers.formatDecimal(o.totalAmount, 0, 'POINT', 0, 'COMMA')} + ' đ'">0</td>
-           <td style="display: flex; gap: 8px;">
-             <a class="btn btn-sm btn-ghost" th:href="@{'/admin/orders/' + ${o.id}}">Chi tiết</a>
-             
-             <!-- Quick Actions for Waiting Orders -->
-             <span th:if="${o.status.name() == 'CHO_XAC_NHAN'}" style="display: flex; gap: 8px;">
-               <form th:action="@{'/admin/orders/' + ${o.id} + '/status'}" method="post">
-                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                 <input type="hidden" name="status" value="DANG_GIAO"/>
-                 <button type="submit" class="btn btn-sm" style="background:#2e7d32; color:white; border:none;">Xác nhận</button>
-               </form>
-               <form th:action="@{'/admin/orders/' + ${o.id} + '/status'}" method="post">
-                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                 <input type="hidden" name="status" value="HUY"/>
-                 <button type="submit" class="btn btn-sm btn-outline" style="color:#d32f2f; border-color:#d32f2f;">Hủy</button>
-               </form>
-             </span>
-           </td>
+            <td>
+              <div class="pill-row">
+                <a class="btn btn-edit-luxury" th:href="@{/admin/orders/{id}(id=${o.id})}">Chi tiết</a>
+                
+                <!-- Quick Actions for Waiting Orders -->
+                <th:block th:if="${o.status.name() == 'CHO_XAC_NHAN'}">
+                  <form th:id="'confirm-order-form-' + ${o.id}" th:action="@{/admin/orders/{id}/status(id=${o.id})}" method="post" style="display:none">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <input type="hidden" name="status" value="DANG_GIAO"/>
+                  </form>
+                  <button type="button" class="btn btn-success" 
+                          th:data-id="${o.id}"
+                          onclick="document.getElementById('confirm-order-form-' + this.getAttribute('data-id')).submit()">Duyệt</button>
+                  
+                  <button type="button" class="btn btn-delete-luxury" 
+                          th:data-id="${o.id}" onclick="openCancelModal(this)">Hủy</button>
+                  <form th:id="'cancel-order-form-' + ${o.id}" th:action="@{/admin/orders/{id}/status(id=${o.id})}" method="post" style="display:none">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <input type="hidden" name="status" value="HUY"/>
+                  </form>
+                </th:block>
+              </div>
+            </td>
         </tr>
         </tbody>
       </table>
     </div>
+
+    <!-- Custom Luxury Cancel Confirm Modal -->
+    <div id="confirm-modal" class="modal">
+      <div class="modal-content confirm-card">
+        <div class="modal-header">
+          <h3 style="margin:0; color: var(--text);">Xác nhận hủy đơn</h3>
+          <button class="modal-close" onclick="closeConfirm()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Bạn có chắc chắn muốn hủy đơn hàng <strong id="delete-item-name">này</strong> không? Hành động này sẽ thông báo cho khách hàng.</p>
+        </div>
+        <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+          <button class="btn btn-ghost" onclick="closeConfirm()">Giữ lại đơn</button>
+          <button id="confirm-delete-btn" class="btn btn-danger">Xác nhận hủy</button>
+        </div>
+      </div>
+    </div>
   </section>
 </main>
 <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script>
+  let currentCancelId = null;
+
+  function openCancelModal(btn) {
+    currentCancelId = btn.getAttribute('data-id');
+    document.getElementById('delete-item-name').innerText = '#' + currentCancelId;
+    document.getElementById('confirm-modal').classList.add('active');
+  }
+
+  function closeConfirm() {
+    document.getElementById('confirm-modal').classList.remove('active');
+    currentCancelId = null;
+  }
+
+  document.getElementById('confirm-delete-btn').addEventListener('click', () => {
+    if (currentCancelId) {
+      document.getElementById('cancel-order-form-' + currentCancelId).submit();
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+      setTimeout(() => {
+        alert.classList.add('fade-out');
+        setTimeout(() => alert.remove(), 400);
+      }, 3000);
+    });
+  });
+
+  window.addEventListener('click', (e) => {
+    const modal = document.getElementById('confirm-modal');
+    if (e.target === modal) closeConfirm();
+  });
+</script>
 </body>
 </html>

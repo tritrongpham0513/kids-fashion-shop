@@ -50,6 +50,9 @@ public class ShopOrder {
 	@Column(name = "shipping_address", nullable = false, length = 400)
 	private String shippingAddress;
 
+	@Column(name = "payment_method", length = 30)
+	private String paymentMethod;
+
 	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt;
 
@@ -122,6 +125,14 @@ public class ShopOrder {
 
 	public void setShippingAddress(String shippingAddress) {
 		this.shippingAddress = shippingAddress;
+	}
+
+	public String getPaymentMethod() {
+		return this.paymentMethod;
+	}
+
+	public void setPaymentMethod(String paymentMethod) {
+		this.paymentMethod = paymentMethod;
 	}
 
 	public LocalDateTime getCreatedAt() {

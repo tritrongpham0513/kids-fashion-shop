@@ -6,8 +6,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +32,16 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	org.springframework.data.domain.Page<Product> findPageByNameContainingIgnoreCase(String keyword, Pageable pageable);
 	org.springframework.data.domain.Page<Product> findPageByNewArrivalTrueOrderByCreatedAtDesc(Pageable pageable);
 	org.springframework.data.domain.Page<Product> findPageByBestSellerTrueOrderByCreatedAtDesc(Pageable pageable);
+
+	@Modifying
+	@Transactional
+	@Query(value = "UPDATE products SET category_id = NULL WHERE category_id = :categoryId", nativeQuery = true)
+	void setCategoryToNullByCategoryId(@Param("categoryId") Long categoryId);
+
+	@Modifying
+	@Transactional
+	@Query(value = "ALTER TABLE products MODIFY category_id BIGINT NULL", nativeQuery = true)
+	void repairSchemaForNullableCategory();
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("select p from Product p where p.id = :id")

@@ -33,17 +33,11 @@ public class AuthController {
 
 	@PostMapping("/register")
 	public String registerSubmit(@RequestParam("email") String email, @RequestParam("password") String password,
-			@RequestParam("confirmPassword") String confirmPassword, @RequestParam("fullName") String fullName,
-			@RequestParam(name = "phone", required = false) String phone,
-			@RequestParam(name = "address", required = false) String address,
-			@RequestParam(name = "agreeTerms", required = false) String agreeTerms,
+			@RequestParam("confirmPassword") String confirmPassword,
+			@RequestParam("displayName") String displayName,
 			RedirectAttributes redirectAttributes) {
-		if (fullName == null || fullName.isBlank()) {
-			redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng nhập họ tên.");
-			return "redirect:/register";
-		}
-		if (!"true".equalsIgnoreCase(agreeTerms)) {
-			redirectAttributes.addFlashAttribute("errorMessage", "Bạn cần đồng ý với điều khoản dịch vụ để tiếp tục.");
+		if (displayName == null || displayName.isBlank()) {
+			redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng nhập tên hiển thị.");
 			return "redirect:/register";
 		}
 		Optional<com.kidfashion.ecommerce.kids_fashion_shop.model.AppUser> existing = this.appUserService
@@ -60,7 +54,7 @@ public class AuthController {
 			redirectAttributes.addFlashAttribute("errorMessage", "Xác nhận mật khẩu không khớp.");
 			return "redirect:/register";
 		}
-		this.appUserService.registerCustomer(email, password, fullName, phone, address);
+		this.appUserService.registerCustomer(email, password, displayName.trim(), null, null);
 		redirectAttributes.addFlashAttribute("successMessage", "Đăng ký thành công. Vui lòng đăng nhập.");
 		return "redirect:/login";
 	}

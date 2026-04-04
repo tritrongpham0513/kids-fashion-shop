@@ -20,8 +20,8 @@
             <h1 th:text="${p.name != null ? p.name : 'Sản phẩm mới'}">Tên Sản Phẩm</h1>
             <p th:text="${p.description}">Mô tả ngắn gọn về sản phẩm hot nhất mùa này.</p>
             <div class="btn-group" th:if="${p.id != null}">
-              <a class="btn" th:href="@{/products/{id}(id=${p.id})}">Mua Ngay</a>
-              <a class="btn btn-ghost" th:href="@{/products/hot}">Xem BST Hot</a>
+              <a class="btn btn-hero-solid" th:href="@{/products/{id}(id=${p.id})}">Mua Ngay</a>
+              <a class="btn btn-hero-outline" th:href="@{/products/hot}">Xem BST Hot</a>
             </div>
           </div>
         </div>
@@ -36,7 +36,7 @@
             <h1>Mùa Xuân Hè <br/> Yêu Thương</h1>
             <p>Khám phá bộ sưu tập thời trang tối giản dành cho bé yêu.</p>
             <div class="btn-group">
-              <a class="btn" th:href="@{/categories}">Xem bộ sưu tập</a>
+              <a class="btn btn-hero-solid" th:href="@{/categories}">Xem bộ sưu tập</a>
             </div>
           </div>
         </div>

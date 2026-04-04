@@ -7,7 +7,8 @@
   <aside th:replace="~{fragments/admin-nav :: sidebar}"></aside>
   <section>
     <h1 style="margin-top:0" th:text="${pageTitle}">Biểu mẫu</h1>
-    <form th:action="@{/admin/products/save}" th:object="${product}" method="post" class="form-card form-grid">
+    <form th:action="@{/admin/products/save}" th:object="${product}" method="post" 
+          enctype="multipart/form-data" class="form-card form-grid">
       <input type="hidden" th:field="*{id}"/>
       <label class="field">Tên sản phẩm
         <input type="text" th:field="*{name}" required/>
@@ -18,17 +19,78 @@
       <label class="field">Giá (đ)
         <input type="number" th:field="*{price}" step="0.01" min="0" required/>
       </label>
-      <label class="field">Liên kết hình ảnh
-        <input type="text" th:field="*{imageUrl}"/>
-      </label>
+      <div class="field" style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <label>
+          <span style="display:block; margin-bottom:8px;">Tải ảnh từ máy tính (Local)</span>
+          <input type="file" name="imageFile" accept="image/*" style="padding: 8px; border: 1.5px dashed var(--border); border-radius: 12px; width: 100%; cursor: pointer;"/>
+        </label>
+        <label>
+          <span style="display:block; margin-bottom:8px;">Hoặc dán Liên kết hình ảnh (URL)</span>
+          <input type="text" th:field="*{imageUrl}" placeholder="http://..."/>
+        </label>
+      </div>
       <label class="field">Tồn kho
         <input type="number" th:field="*{stockQuantity}" min="0" required/>
       </label>
       <label class="field">Danh mục
-        <select name="categoryId" required>
+        <select name="categoryId">
+          <option value="0">-- Không chọn danh mục --</option>
           <option th:each="c : ${categories}" th:value="${c.id}" th:selected="${product.category != null and product.category.id == c.id}"
                   th:text="${c.name}">Tên</option>
         </select>
+      <label class="field" style="grid-column: 1 / -1;">Chọn các Size hiện có
+        <input type="hidden" th:field="*{sizes}" id="sizes-hidden-input"/>
+        <div class="size-selection-grid">
+          <th:block th:each="s : ${ {'6-12M', '12-18M', '18-24M', '1-2Y', '2-3Y', '3-4Y', '4-5Y', '5-6Y', '6-7Y'} }">
+            <label class="size-check-item">
+              <input type="checkbox" th:value="${s}" 
+                     th:checked="${product.sizes != null and #strings.contains(product.sizes, s)}"
+                     onchange="syncSizes()"/>
+              <span th:text="${s}">Size</span>
+            </label>
+          </th:block>
+        </div>
+      </label>
+
+      <style>
+        .size-selection-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+          gap: 10px;
+          background: var(--bg-secondary);
+          padding: 15px;
+          border-radius: 8px;
+          border: 1px solid var(--border);
+          margin-top: 8px;
+        }
+        .size-check-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          padding: 8px;
+          border-radius: 6px;
+          transition: background 0.2s;
+        }
+        .size-check-item:hover {
+          background: rgba(0,0,0,0.05);
+        }
+        [data-theme='dark'] .size-check-item:hover {
+          background: rgba(255,255,255,0.05);
+        }
+      </style>
+
+      <script>
+        function syncSizes() {
+          const checkboxes = document.querySelectorAll('.size-check-item input[type="checkbox"]:checked');
+          const values = Array.from(checkboxes).map(cb => cb.value);
+          document.getElementById('sizes-hidden-input').value = values.join(', ');
+        }
+      </script>
+
+      <label class="field">Danh sách Màu sắc (vẫn dùng dấu phẩy, VD: Hồng, Trắng)
+        <input type="text" th:field="*{colors}" placeholder="VD: Hồng, Trắng, Xanh Navy"/>
       </label>
       <label class="field" style="display:flex;align-items:center;gap:10px">
         <input type="checkbox" th:field="*{newArrival}"/> Hàng mới về
@@ -39,8 +101,16 @@
       <label class="field" style="display:flex;align-items:center;gap:10px">
         <input type="checkbox" th:field="*{bestSeller}"/> Đánh dấu nổi bật (gợi ý hiển thị)
       </label>
-      <button type="submit" class="btn">Lưu</button>
-      <a class="btn btn-ghost" th:href="@{/admin/products}">Hủy</a>
+      <div class="form-actions">
+        <a class="btn btn-ghost" th:href="@{/admin/products}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Quay lại
+        </a>
+        <button type="submit" class="btn btn-success">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          Lưu sản phẩm
+        </button>
+      </div>
     </form>
   </section>
 </main>

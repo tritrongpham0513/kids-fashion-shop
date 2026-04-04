@@ -46,19 +46,21 @@
               </div>
             </div>
             <div class="cart-line-side">
-              <form class="cart-qty-form" th:action="@{/cart/update}" method="post">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                <input type="hidden" name="productId" th:value="${line.product.id}"/>
-                <input type="hidden" name="colorLabel" th:value="${line.colorLabel != null ? line.colorLabel : ''}"/>
-                <input type="hidden" name="sizeLabel" th:value="${line.sizeLabel != null ? line.sizeLabel : ''}"/>
+              <div class="cart-qty-controls" th:data-line-key="${line.lineKey}">
                 <span class="cart-qty-label">Số lượng</span>
                 <div class="cart-qty-row">
+                  <button type="button" class="qty-btn qty-minus" aria-label="Giảm số lượng">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  </button>
                   <input class="cart-qty-input" type="number" name="quantity"
                          th:value="${line.quantity}" min="1"
-                         th:attr="max=${line.product.stockQuantity != null ? line.product.stockQuantity : 9999}"/>
-                  <button type="submit" class="btn btn-sm cart-qty-update">Cập nhật</button>
+                         th:attr="max=${line.product.stockQuantity != null ? line.product.stockQuantity : 9999}"
+                         readonly/>
+                  <button type="button" class="qty-btn qty-plus" aria-label="Tăng số lượng">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  </button>
                 </div>
-              </form>
+              </div>
               <div class="cart-line-sub">
                 <span class="cart-line-sub-label">Tạm tính</span>
                 <strong class="cart-line-sub-value"
@@ -84,8 +86,7 @@
           <h3 class="cart-summary-title">Tóm tắt đơn hàng</h3>
           <div class="cart-summary-row">
             <span>Tạm tính</span>
-            <span id="cart-summary-subtotal"
-                  th:text="${#numbers.formatDecimal(cartSubtotal, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</span>
+            <span id="cart-summary-subtotal">0 đ</span>
           </div>
           <div class="cart-summary-row muted">
             <span>Phí vận chuyển</span>
@@ -93,8 +94,7 @@
           </div>
           <div class="cart-summary-total">
             <span>Tổng cộng</span>
-            <strong id="cart-summary-total"
-                    th:text="${#numbers.formatDecimal(cartSubtotal, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</strong>
+            <strong id="cart-summary-total">0 đ</strong>
           </div>
           <div class="cart-summary-actions">
             <span sec:authorize="isAnonymous()">
@@ -127,33 +127,18 @@
   <div id="selected-line-keys-container"></div>
 </form>
 
-<script>
+<script th:inline="javascript">
   (function () {
     const btn = document.getElementById('checkout-selected-btn');
     const form = document.getElementById('checkout-selected-form');
     const container = document.getElementById('selected-line-keys-container');
-    if (!btn || !form || !container) return;
-
-    btn.addEventListener('click', () => {
-      const selected = Array.from(document.querySelectorAll('.cart-select-checkbox:checked')).map(cb => cb.value);
-      container.innerHTML = '';
-      if (!selected || selected.length === 0) {
-        alert('Bạn cần chọn ít nhất một sản phẩm trong giỏ để thanh toán.');
-        return;
-      }
-      selected.forEach((key) => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'selectedLineKeys';
-        input.value = key;
-        container.appendChild(input);
-      });
-      form.submit();
-    });
+    const csrfHeader = /*[[${_csrf.headerName}]]*/ 'X-CSRF-TOKEN';
+    const csrfToken = /*[[${_csrf.token}]]*/ '';
 
     function formatVnd(amount) {
+      if (amount === undefined || amount === null) return '0 đ';
       try {
-        return amount.toLocaleString('vi-VN') + ' đ';
+        return Math.round(amount).toLocaleString('vi-VN') + ' đ';
       } catch (e) {
         return amount + ' đ';
       }
@@ -180,18 +165,94 @@
         }
       });
 
-      // Nếu chưa chọn gì, hiển thị 0 đ
-      summarySubtotalEl.textContent = formatVnd(Math.max(0, Math.round(subtotal)));
-      summaryTotalEl.textContent = formatVnd(Math.max(0, Math.round(subtotal)));
+      summarySubtotalEl.textContent = formatVnd(subtotal);
+      summaryTotalEl.textContent = formatVnd(subtotal);
     }
 
-    // Tính lại khi load và khi tick/untick
+    async function updateQuantity(lineKey, quantity, inputEl, subtotalEl, buttons) {
+      buttons.forEach(b => b.disabled = true);
+      const formData = new FormData();
+      formData.append('lineKey', lineKey);
+      formData.append('quantity', quantity);
+
+      try {
+        const response = await fetch('/api/cart/update', {
+          method: 'POST',
+          headers: {
+            [csrfHeader]: csrfToken
+          },
+          body: formData
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            inputEl.value = data.updatedQuantity;
+            subtotalEl.textContent = formatVnd(data.lineSubtotal);
+            subtotalEl.setAttribute('data-line-subtotal', data.lineSubtotal);
+            recalcSummary();
+          }
+        } else {
+          console.error('Update failed');
+        }
+      } catch (error) {
+        console.error('Error updating cart:', error);
+      } finally {
+        buttons.forEach(b => b.disabled = false);
+      }
+    }
+
     recalcSummary();
+
     document.addEventListener('change', (e) => {
       if (e.target && e.target.classList.contains('cart-select-checkbox')) {
         recalcSummary();
       }
     });
+
+    document.querySelectorAll('.cart-qty-controls').forEach(control => {
+      const lineKey = control.getAttribute('data-line-key');
+      const input = control.querySelector('.cart-qty-input');
+      const minusBtn = control.querySelector('.qty-minus');
+      const plusBtn = control.querySelector('.qty-plus');
+      const line = control.closest('.cart-line');
+      if (!line) return;
+      const subtotalEl = line.querySelector('.cart-line-sub-value');
+
+      minusBtn.addEventListener('click', () => {
+        const current = parseInt(input.value);
+        if (current > 1) {
+          updateQuantity(lineKey, current - 1, input, subtotalEl, [minusBtn, plusBtn]);
+        }
+      });
+
+      plusBtn.addEventListener('click', () => {
+        const current = parseInt(input.value);
+        const max = parseInt(input.getAttribute('max')) || 9999;
+        if (current < max) {
+          updateQuantity(lineKey, current + 1, input, subtotalEl, [minusBtn, plusBtn]);
+        }
+      });
+    });
+
+    if (btn && form && container) {
+      btn.addEventListener('click', () => {
+        const selected = Array.from(document.querySelectorAll('.cart-select-checkbox:checked')).map(cb => cb.value);
+        container.innerHTML = '';
+        if (!selected || selected.length === 0) {
+          alert('Bạn cần chọn ít nhất một sản phẩm trong giỏ để thanh toán.');
+          return;
+        }
+        selected.forEach((key) => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = 'selectedLineKeys';
+          input.value = key;
+          container.appendChild(input);
+        });
+        form.submit();
+      });
+    }
   })();
 </script>
 </body>

@@ -2,6 +2,7 @@ package com.kidfashion.ecommerce.kids_fashion_shop.controller.admin;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -46,8 +47,9 @@ public class AdminOrderController {
 	}
 
 	@PostMapping("/{id}/status")
-	public String updateStatus(@PathVariable("id") Long id, @RequestParam("status") OrderStatus status) {
+	public String updateStatus(@PathVariable("id") Long id, @RequestParam("status") OrderStatus status, RedirectAttributes redirectAttributes) {
 		this.shopOrderService.updateStatus(id, status);
+		redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật trạng thái đơn hàng thành công!");
 		return "redirect:/admin/orders/" + id;
 	}
 }
