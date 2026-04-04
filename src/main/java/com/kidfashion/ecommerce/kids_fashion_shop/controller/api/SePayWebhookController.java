@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kidfashion.ecommerce.kids_fashion_shop.model.OrderStatus;
 import com.kidfashion.ecommerce.kids_fashion_shop.model.ShopOrder;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.SePayService;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.ShopOrderService;

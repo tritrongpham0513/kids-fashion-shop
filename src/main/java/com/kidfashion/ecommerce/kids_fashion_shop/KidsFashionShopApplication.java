@@ -4,10 +4,12 @@ import com.kidfashion.ecommerce.kids_fashion_shop.config.AdminBootstrapPropertie
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
+@EnableAsync
 @EnableConfigurationProperties(AdminBootstrapProperties.class)
 public class KidsFashionShopApplication {
 

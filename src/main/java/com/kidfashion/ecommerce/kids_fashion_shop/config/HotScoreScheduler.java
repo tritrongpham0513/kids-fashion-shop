@@ -2,6 +2,7 @@ package com.kidfashion.ecommerce.kids_fashion_shop.config;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -17,10 +18,11 @@ public class HotScoreScheduler {
 		this.hotScoreService = hotScoreService;
 	}
 
+	@Async
 	@EventListener(ApplicationReadyEvent.class)
 	public void onReady() {
 		try {
-			log.info("[Startup] Bắt đầu tính toán điểm HOT khởi tạo...");
+			log.info("[Startup] Bắt đầu tính toán điểm HOT khởi tạo trên luồng chảy ngầm...");
 			this.hotScoreService.recalculateAll();
 			log.info("[Startup] Tính toán điểm HOT hoàn tất.");
 		} catch (Exception e) {
@@ -28,6 +30,7 @@ public class HotScoreScheduler {
 		}
 	}
 
+	@Async
 	@Scheduled(fixedDelayString = "${app.hot-score.recalc-ms:300000}")
 	public void recalcPeriodically() {
 		try {
