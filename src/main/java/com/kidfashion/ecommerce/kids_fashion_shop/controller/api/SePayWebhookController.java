@@ -1,6 +1,8 @@
 package com.kidfashion.ecommerce.kids_fashion_shop.controller.api;
 
+import java.math.BigDecimal;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kidfashion.ecommerce.kids_fashion_shop.model.OrderStatus;
+import com.kidfashion.ecommerce.kids_fashion_shop.model.ShopOrder;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.SePayService;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.ShopOrderService;
 
@@ -60,11 +64,37 @@ public class SePayWebhookController {
 
         // 4. Cập nhật đơn hàng thông qua Service (Nguyên tử)
         try {
+            // Lấy số tiền khách đã chuyển từ SePay (transferAmount)
+            Object amountObj = payload.get("transferAmount");
+            BigDecimal transferAmount = BigDecimal.ZERO;
+            if (amountObj != null) {
+                transferAmount = new BigDecimal(String.valueOf(amountObj));
+            }
+
+            // Lấy thông tin đơn hàng để so sánh tiền
+            Optional<ShopOrder> orderOpt = this.shopOrderService.findById(orderId);
+            if (orderOpt.isEmpty()) {
+                log.warn("[SePay] Không tìm thấy đơn hàng #{} trong hệ thống.", orderId);
+                return ResponseEntity.ok("OK (Order not found)");
+            }
+            
+            ShopOrder order = orderOpt.get();
+            BigDecimal totalAmount = order.getTotalAmount();
+
+            // KIỂM TRA SỐ TIỀN: Phải chuyển ĐỦ hoặc DƯ mới duyệt
+            if (transferAmount.compareTo(totalAmount) < 0) {
+                log.warn("[SePay] Đơn hàng #{}: Khách chuyển THIẾU tiền! (Cần: {}, Chuyển: {})", 
+                         orderId, totalAmount, transferAmount);
+                return ResponseEntity.ok("OK (Amount mismatch - too low)");
+            }
+
             String transactionId = String.valueOf(payload.get("id"));
             this.shopOrderService.completePayment(orderId, transactionId, content);
-            log.info("[SePay] Xử lý thành công cho Đơn hàng #{}. Giao dịch: {}", orderId, transactionId);
+            log.info("[SePay] Xác nhận thành công đơn hàng #{}. (Số tiền: {}, Giao dịch: {})", 
+                     orderId, transferAmount, transactionId);
+
         } catch (Exception e) {
-            log.error("[SePay] Lỗi khi cập nhật đơn hàng #{}: {}", orderId, e.getMessage());
+            log.error("[SePay] Lỗi nghiêm trọng khi đối soát đơn hàng #{}: {}", orderId, e.getMessage());
             return ResponseEntity.status(500).body("Internal Error");
         }
 
