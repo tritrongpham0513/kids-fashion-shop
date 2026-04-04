@@ -74,7 +74,4 @@ Dự án đã được cấu hình sẵn để triển khai mượt mà trên Re
 
 ---
 
-## ❤️ Đóng góp
-Dự án được xây dựng với mục tiêu mang lại giải pháp bán hàng thời trang tối ưu nhất. Mọi ý kiến đóng góp hoặc báo lỗi vui lòng gửi về hòm thư hỗ trợ của shop.
 
-**Chúc bạn kinh doanh rực rỡ và thành công!** 🎈✨
