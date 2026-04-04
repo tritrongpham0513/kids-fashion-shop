@@ -1,7 +1,6 @@
 package com.kidfashion.ecommerce.kids_fashion_shop.controller.api;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kidfashion.ecommerce.kids_fashion_shop.model.OrderStatus;
-import com.kidfashion.ecommerce.kids_fashion_shop.model.ShopOrder;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.SePayService;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.ShopOrderService;
 
@@ -57,21 +54,18 @@ public class SePayWebhookController {
         // 3. Tìm Mã đơn hàng trong nội dung (Regex)
         Long orderId = extractOrderId(content);
         if (orderId == null) {
-            log.warn("Không tìm thấy mã đơn hàng trong nội dung: {}", content);
+            log.warn("[SePay] Không tìm thấy mã đơn hàng trong nội dung: {}", content);
             return ResponseEntity.ok("OK (No Order ID found)");
         }
 
-        // 4. Cập nhật đơn hàng
-        Optional<ShopOrder> orderOpt = this.shopOrderService.findById(orderId);
-        if (orderOpt.isPresent()) {
-            ShopOrder order = orderOpt.get();
-            if (order.getStatus() == OrderStatus.CHO_THANH_TOAN) {
-                order.setStatus(OrderStatus.CHO_XAC_NHAN);
-                order.setPaymentStatus("PAID");
-                order.setSepayTransactionId(String.valueOf(payload.get("id")));
-                this.shopOrderService.updateStatus(order.getId(), order.getStatus());
-                log.info("Đơn hàng #{} đã được thanh toán tự động qua SePay.", orderId);
-            }
+        // 4. Cập nhật đơn hàng thông qua Service (Nguyên tử)
+        try {
+            String transactionId = String.valueOf(payload.get("id"));
+            this.shopOrderService.completePayment(orderId, transactionId, content);
+            log.info("[SePay] Xử lý thành công cho Đơn hàng #{}. Giao dịch: {}", orderId, transactionId);
+        } catch (Exception e) {
+            log.error("[SePay] Lỗi khi cập nhật đơn hàng #{}: {}", orderId, e.getMessage());
+            return ResponseEntity.status(500).body("Internal Error");
         }
 
         return ResponseEntity.ok("OK");

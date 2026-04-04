@@ -185,11 +185,25 @@ public class ShopOrderService {
 	@Transactional
 	public void updateStatus(Long orderId, OrderStatus newStatus) {
 		Optional<ShopOrder> opt = this.shopOrderRepository.findById(orderId);
-		if (opt.isEmpty()) {
-			return;
-		}
+		if (opt.isEmpty()) return;
 		ShopOrder o = opt.get();
 		o.setStatus(newStatus);
 		this.shopOrderRepository.save(o);
+	}
+
+	@Transactional
+	public void completePayment(Long orderId, String transactionId, String transferContent) {
+		Optional<ShopOrder> opt = this.shopOrderRepository.findById(orderId);
+		if (opt.isPresent()) {
+			ShopOrder o = opt.get();
+			// Chỉ cập nhật nếu đang chờ thanh toán
+			if (o.getStatus() == OrderStatus.CHO_THANH_TOAN) {
+				o.setStatus(OrderStatus.CHO_XAC_NHAN);
+				o.setPaymentStatus("PAID");
+				o.setSepayTransactionId(transactionId);
+				o.setSepayTransferContent(transferContent);
+				this.shopOrderRepository.save(o);
+			}
+		}
 	}
 }
