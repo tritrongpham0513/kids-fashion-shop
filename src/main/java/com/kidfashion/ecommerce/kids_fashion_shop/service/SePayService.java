@@ -28,7 +28,7 @@ public class SePayService {
      * Format: https://qr.sepay.vn/img?bank=<BANK_ID>&acc=<ACC_NUMBER>&template=compact&amount=<AMOUNT>&des=<DESCRIPTION>
      */
     public String generateQrUrl(ShopOrder order) {
-        String amount = order.getTotalAmount().setScale(0).toString();
+        String amount = order.getTotalAmount().setScale(0, java.math.RoundingMode.HALF_UP).toString();
         String description = "THANH TOAN DON HANG " + order.getId();
         order.setSepayTransferContent(description); // Lưu lại nội dung để đối soát
 

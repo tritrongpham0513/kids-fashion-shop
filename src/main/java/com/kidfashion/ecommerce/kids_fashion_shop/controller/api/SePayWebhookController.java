@@ -80,10 +80,13 @@ public class SePayWebhookController {
             ShopOrder order = orderOpt.get();
             BigDecimal totalAmount = order.getTotalAmount();
 
-            // KIỂM TRA SỐ TIỀN: Phải chuyển ĐỦ hoặc DƯ mới duyệt
-            if (transferAmount.compareTo(totalAmount) < 0) {
+            // KIỂM TRA SỐ TIỀN: Phải chuyển ĐỦ hoặc DƯ (làm tròn về số nguyên để tránh sai số thập phân)
+            BigDecimal totalAmountRounded = totalAmount.setScale(0, java.math.RoundingMode.HALF_UP);
+            BigDecimal transferAmountRounded = transferAmount.setScale(0, java.math.RoundingMode.HALF_UP);
+
+            if (transferAmountRounded.compareTo(totalAmountRounded) < 0) {
                 log.warn("[SePay] Đơn hàng #{}: Khách chuyển THIẾU tiền! (Cần: {}, Chuyển: {})", 
-                         orderId, totalAmount, transferAmount);
+                         orderId, totalAmountRounded, transferAmountRounded);
                 return ResponseEntity.ok("OK (Amount mismatch - too low)");
             }
 
@@ -102,20 +105,24 @@ public class SePayWebhookController {
 
     private Long extractOrderId(String content) {
         if (content == null) return null;
-        // 1. Tìm "DON HANG X" (Ưu tiên cao nhất)
-        Pattern p1 = Pattern.compile("DON HANG (\\d+)", Pattern.CASE_INSENSITIVE);
+        // 1. Tìm "DON HANG X" hoặc "THANH TOAN DON HANG X"
+        Pattern p1 = Pattern.compile("(?:THANH TOAN )?DON HANG (\\d+)", Pattern.CASE_INSENSITIVE);
         Matcher m1 = p1.matcher(content);
         if (m1.find()) return Long.parseLong(m1.group(1));
 
-        // 2. Tìm "DHX" (Ví dụ: DH1)
+        // 2. Tìm "DHX" (Ví dụ: DH123)
         Pattern p2 = Pattern.compile("DH(\\d+)", Pattern.CASE_INSENSITIVE);
         Matcher m2 = p2.matcher(content);
         if (m2.find()) return Long.parseLong(m2.group(1));
 
-        // 3. Tìm số cuối cùng trong chuỗi (Dành cho nội dung chỉ có số)
-        Pattern p3 = Pattern.compile("(\\d+)$");
-        Matcher m3 = p3.matcher(content.trim());
-        if (m3.find()) return Long.parseLong(m3.group(1));
+        // 3. Tìm số có từ 1-6 chữ số xuất hiện độc lập (Trường hợp khách chỉ ghi mỗi số đơn hàng)
+        Pattern p3 = Pattern.compile("\\b(\\d{1,6})\\b");
+        Matcher m3 = p3.matcher(content);
+        while (m3.find()) {
+            try {
+                return Long.parseLong(m3.group(1));
+            } catch (Exception e) {}
+        }
 
         return null;
     }

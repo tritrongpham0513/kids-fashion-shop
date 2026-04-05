@@ -142,7 +142,7 @@ public class ShopOrderService {
 		if (total.compareTo(BigDecimal.ZERO) < 0) {
 			total = BigDecimal.ZERO;
 		}
-		order.setTotalAmount(total.setScale(2, java.math.RoundingMode.HALF_UP));
+		order.setTotalAmount(total.setScale(0, java.math.RoundingMode.HALF_UP));
 
 		for (int i = 0; i < lines.size(); i++) {
 			OrderLine line = lines.get(i);
@@ -200,12 +200,20 @@ public class ShopOrderService {
 			ShopOrder o = opt.get();
 			// Chỉ cập nhật nếu đang chờ thanh toán
 			if (o.getStatus() == OrderStatus.CHO_THANH_TOAN) {
-				o.setStatus(OrderStatus.CHO_XAC_NHAN);
+				o.setStatus(OrderStatus.DANG_GIAO);
 				o.setPaymentStatus("PAID");
 				o.setSepayTransactionId(transactionId);
 				o.setSepayTransferContent(transferContent);
 				this.shopOrderRepository.save(o);
 			}
 		}
+	}
+
+	@Transactional
+	public void saveSepayTransferContent(Long orderId, String content) {
+		this.shopOrderRepository.findById(orderId).ifPresent(o -> {
+			o.setSepayTransferContent(content);
+			this.shopOrderRepository.save(o);
+		});
 	}
 }

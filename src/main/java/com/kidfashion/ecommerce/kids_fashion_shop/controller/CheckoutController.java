@@ -14,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -75,12 +76,23 @@ public class CheckoutController {
 		}
 		
 		String qrUrl = this.sePayService.generateQrUrl(order);
-		this.shopOrderService.updateStatus(order.getId(), order.getStatus()); // Force save transfer content
+		this.shopOrderService.saveSepayTransferContent(order.getId(), order.getSepayTransferContent()); 
 		
 		model.addAttribute("order", order);
 		model.addAttribute("qrUrl", qrUrl);
 		model.addAttribute("pageTitle", "Thanh toán đơn hàng");
 		return "shop/sepay-payment";
+	}
+
+	@GetMapping(value = "/api/checkout/order-status/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+	@PreAuthorize("hasRole('CUSTOMER')")
+	@ResponseBody
+	public java.util.Map<String, String> getOrderStatus(@PathVariable("id") Long id, @AuthenticationPrincipal ShopUserDetails principal) {
+		Optional<ShopOrder> opt = this.shopOrderService.findById(id);
+		if (opt.isPresent() && opt.get().getCustomer().getId().equals(principal.getAppUser().getId())) {
+			return java.util.Map.of("status", opt.get().getStatus().name());
+		}
+		return java.util.Map.of("status", "NOT_FOUND");
 	}
 
 	@GetMapping("/checkout")
