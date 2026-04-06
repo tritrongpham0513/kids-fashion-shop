@@ -154,14 +154,12 @@
     var paymentOptions = document.querySelectorAll('input[name="paymentMethodVisual"]');
     var hasDefault = /*[[${hasDefaultAddress}]]*/ false;
 
+    var csrfHeader = /*[[${_csrf.headerName}]]*/ 'X-CSRF-TOKEN';
+    var csrfToken = /*[[${_csrf.token}]]*/ '';
+
     var previewUrl = /*[[@{/checkout/preview-discount}]]*/ '/checkout/preview-discount';
     var debounceMs = 320;
     var t = null;
-
-    function readXsrf() {
-      var m = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]+)/);
-      return m ? decodeURIComponent(m[1]) : '';
-    }
 
     function setMsg(text, ok) {
       if (!msgEl) return;
@@ -187,7 +185,7 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-XSRF-TOKEN': readXsrf()
+          [csrfHeader]: csrfToken
         },
         body: JSON.stringify({ code: code })
       })
