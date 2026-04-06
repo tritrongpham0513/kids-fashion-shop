@@ -170,6 +170,9 @@
             <a th:if="${p.id != null}" th:href="@{/products/{id}(id=${p.id})}"><strong th:text="${p.name != null ? p.name : 'Sản phẩm'}">Tên</strong></a>
             <div class="price"
                  th:text="${(p != null && p.price != null) ? #numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA') : '0'} + ' đ'">0 đ</div>
+            <div class="sold-count-mini" th:if="${p.soldCount != null && p.soldCount > 0}" 
+                 th:text="'Đã bán ' + ${p.soldCount}" 
+                 style="font-size: 0.75rem; color: var(--muted); margin-top: 4px;">Đã bán 0</div>
           </div>
         </article>
       </div>
@@ -201,6 +204,9 @@
             <a th:if="${p.id != null}" th:href="@{/products/{id}(id=${p.id})}"><strong th:text="${p.name != null ? p.name : 'Sản phẩm'}">Tên</strong></a>
             <div class="price"
                  th:text="${(p != null && p.price != null) ? #numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA') : '0'} + ' đ'">0 đ</div>
+            <div class="sold-count-mini" th:if="${p.soldCount != null && p.soldCount > 0}" 
+                 th:text="'Đã bán ' + ${p.soldCount}" 
+                 style="font-size: 0.75rem; color: var(--muted); margin-top: 4px;">Đã bán 0</div>
           </div>
         </article>
       </div>

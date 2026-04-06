@@ -76,6 +76,10 @@ public class Product {
 	@Column(name = "colors", length = 500)
 	private String colors;
 
+	/** Tổng số lượng sản phẩm đã bán */
+	@Column(name = "sold_count", nullable = false)
+	private Long soldCount = 0L;
+
 	public Product() {
 		this.newArrival = Boolean.FALSE;
 		this.bestSeller = Boolean.FALSE;
@@ -220,5 +224,13 @@ public class Product {
 
 	public void setColors(String colors) {
 		this.colors = colors;
+	}
+
+	public Long getSoldCount() {
+		return soldCount;
+	}
+
+	public void setSoldCount(Long soldCount) {
+		this.soldCount = soldCount == null ? 0L : soldCount;
 	}
 }

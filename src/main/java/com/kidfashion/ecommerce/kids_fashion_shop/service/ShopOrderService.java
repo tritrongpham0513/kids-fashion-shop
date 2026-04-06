@@ -25,14 +25,17 @@ public class ShopOrderService {
 	private final DiscountCodeService discountCodeService;
 	private final AppUserService appUserService;
 	private final HotScoreService hotScoreService;
+	private final ProductSoldCountService productSoldCountService;
 
 	public ShopOrderService(ShopOrderRepository shopOrderRepository, ProductService productService,
-			DiscountCodeService discountCodeService, AppUserService appUserService, HotScoreService hotScoreService) {
+			DiscountCodeService discountCodeService, AppUserService appUserService, HotScoreService hotScoreService,
+			ProductSoldCountService productSoldCountService) {
 		this.shopOrderRepository = shopOrderRepository;
 		this.productService = productService;
 		this.discountCodeService = discountCodeService;
 		this.appUserService = appUserService;
 		this.hotScoreService = hotScoreService;
+		this.productSoldCountService = productSoldCountService;
 	}
 
 	public List<ShopOrder> findAllNewsestFirst() {
@@ -159,6 +162,8 @@ public class ShopOrderService {
 			p.setStockQuantity(stock - q);
 			// Lưu tường minh để đảm bảo tồn kho được cập nhật ngay lập tức xuống DB
 			this.productService.save(p);
+			// Cập nhật số lượng đã bán (soldCount)
+			this.productSoldCountService.incrementSoldCount(p.getId(), q);
 		}
 
 		if (applied != null) {

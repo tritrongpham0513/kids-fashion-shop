@@ -22,6 +22,11 @@
     <div class="cart-layout" th:if="${not #lists.isEmpty(cartLines)}">
       <div class="cart-items">
         <div class="cart-items-card">
+          <!-- Select All Header -->
+          <div class="cart-select-all-header" style="display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); gap: 12px; font-weight: 600;">
+            <input type="checkbox" id="cart-select-all" aria-label="Chọn tất cả sản phẩm"/>
+            <label for="cart-select-all" style="cursor:pointer;">Chọn tất cả (<span th:text="${#lists.size(cartLines)}">0</span> sản phẩm)</label>
+          </div>
           <div class="cart-line" th:each="line : ${cartLines}">
             <div class="cart-line-main">
               <input type="checkbox"
@@ -203,9 +208,30 @@
     }
 
     recalcSummary();
+    
+    // Select All Logic
+    const selectAllCb = document.getElementById('cart-select-all');
+    const childCheckboxes = Array.from(document.querySelectorAll('.cart-select-checkbox'));
+
+    if (selectAllCb) {
+      selectAllCb.addEventListener('change', () => {
+        const isChecked = selectAllCb.checked;
+        childCheckboxes.forEach(cb => {
+          cb.checked = isChecked;
+        });
+        recalcSummary();
+      });
+    }
 
     document.addEventListener('change', (e) => {
       if (e.target && e.target.classList.contains('cart-select-checkbox')) {
+        // Update Select All state
+        if (selectAllCb) {
+          const allChecked = childCheckboxes.every(cb => cb.checked);
+          const noneChecked = childCheckboxes.every(cb => !cb.checked);
+          selectAllCb.checked = allChecked;
+          selectAllCb.indeterminate = !allChecked && !noneChecked;
+        }
         recalcSummary();
       }
     });
