@@ -205,7 +205,8 @@ public class ShopOrderService {
 			ShopOrder o = opt.get();
 			// Chỉ cập nhật nếu đang chờ thanh toán
 			if (o.getStatus() == OrderStatus.CHO_THANH_TOAN) {
-				o.setStatus(OrderStatus.DANG_GIAO);
+				// Sau khi thanh toán thành công, chuyển về Chờ xác nhận để Admin kiểm tra và chuẩn bị hàng
+				o.setStatus(OrderStatus.CHO_XAC_NHAN);
 				o.setPaymentStatus("PAID");
 				o.setSepayTransactionId(transactionId);
 				o.setSepayTransferContent(transferContent);
@@ -220,5 +221,20 @@ public class ShopOrderService {
 			o.setSepayTransferContent(content);
 			this.shopOrderRepository.save(o);
 		});
+	}
+
+	@Transactional
+	public void requestReturn(Long orderId, Long customerId, String reason) {
+		Optional<ShopOrder> opt = this.shopOrderRepository.findById(orderId);
+		if (opt.isPresent()) {
+			ShopOrder o = opt.get();
+			// Kiểm tra quyền sở hữu và trạng thái cho phép trả hàng (phải là HOAN_THANH)
+			if (o.getCustomer() != null && o.getCustomer().getId().equals(customerId) 
+					&& o.getStatus() == OrderStatus.HOAN_THANH) {
+				o.setStatus(OrderStatus.TRA_HANG);
+				o.setReturnReason(reason);
+				this.shopOrderRepository.save(o);
+			}
+		}
 	}
 }

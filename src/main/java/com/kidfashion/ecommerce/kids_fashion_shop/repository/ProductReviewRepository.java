@@ -19,5 +19,8 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, Lo
 
 	List<ProductReview> findByProductIdOrderByCreatedAtDesc(Long productId);
 
+	@Query("select r.product.id, count(r), coalesce(avg(r.rating), 0.0) from ProductReview r group by r.product.id")
+	List<Object[]> findAllProductReviewsAggregated();
+
 	void deleteByProductId(Long productId);
 }

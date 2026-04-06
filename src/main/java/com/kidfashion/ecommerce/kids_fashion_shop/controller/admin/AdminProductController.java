@@ -61,33 +61,31 @@ public class AdminProductController {
 	public String save(@ModelAttribute("product") Product product, 
 	                   @RequestParam(value = "categoryId", required = false) Long categoryId,
 	                   @RequestParam(value = "imageFile", required = false) org.springframework.web.multipart.MultipartFile imageFile,
+	                   @RequestParam(value = "extraImages", required = false) org.springframework.web.multipart.MultipartFile[] extraImages,
 	                   RedirectAttributes redirectAttributes) {
 		
 		boolean isNew = (product.getId() == null);
 		
-		// Handle Image Upload
+		// 1. Handle Main Image Upload
 		if (imageFile != null && !imageFile.isEmpty()) {
 			try {
 				String imageUrl = this.fileStorageService.saveFile(imageFile);
 				product.setImageUrl(imageUrl);
 			} catch (java.io.IOException e) {
-				redirectAttributes.addFlashAttribute("errorMessage", "Lỗi tải tệp: " + e.getMessage());
+				redirectAttributes.addFlashAttribute("errorMessage", "Lỗi tải ảnh chính: " + e.getMessage());
 				return isNew ? "redirect:/admin/products/new" : "redirect:/admin/products/" + product.getId() + "/edit";
 			}
 		}
 
+		// 2. Resolve Category
 		if (categoryId != null && categoryId > 0) {
 			Optional<Category> cat = this.categoryService.findById(categoryId);
-			if (cat.isPresent()) {
-				product.setCategory(cat.get());
-			} else {
-				product.setCategory(null);
-			}
+			product.setCategory(cat.orElse(null));
 		} else {
-			this.productService.repairSchema();
 			product.setCategory(null);
 		}
 		
+		// 3. Sync Existing Data if Editing
 		if (!isNew) {
 			Optional<Product> existing = this.productService.findById(product.getId());
 			if (existing.isPresent()) {
@@ -97,29 +95,60 @@ public class AdminProductController {
 				product.setSearchImpressionCount(e.getSearchImpressionCount());
 				product.setSearchClickCount(e.getSearchClickCount());
 				product.setHotScore(e.getHotScore());
+				product.setImages(e.getImages()); // Keep existing images
 				
-				// Handle Image URL if no new upload and the URL field is empty/blank
 				if ((product.getImageUrl() == null || product.getImageUrl().isBlank()) && e.getImageUrl() != null) {
 					product.setImageUrl(e.getImageUrl());
 				}
-			} else {
-				product.setCreatedAt(LocalDateTime.now());
 			}
 		} else {
 			product.setCreatedAt(LocalDateTime.now());
 		}
 		
-		// Ensure Boolean flags are not null for new products
+		// 4. Default Boolean Flags
 		if (product.getNewArrival() == null) product.setNewArrival(Boolean.FALSE);
 		if (product.getBestSeller() == null) product.setBestSeller(Boolean.FALSE);
 		if (product.getAdminHot() == null) product.setAdminHot(Boolean.FALSE);
 		
-		this.productService.save(product);
+		// 5. Save Product First
+		Product savedProduct = this.productService.save(product);
+
+		// 6. Handle Extra Gallery Images
+		if (extraImages != null && extraImages.length > 0) {
+			for (org.springframework.web.multipart.MultipartFile file : extraImages) {
+				if (file != null && !file.isEmpty()) {
+					try {
+						String url = this.fileStorageService.saveFile(file);
+						com.kidfashion.ecommerce.kids_fashion_shop.model.ProductImage pi = new com.kidfashion.ecommerce.kids_fashion_shop.model.ProductImage();
+						pi.setProduct(savedProduct);
+						pi.setImageUrl(url);
+						pi.setSortOrder(0);
+						savedProduct.getImages().add(pi);
+					} catch (java.io.IOException e) {
+						// Log error but continue with other images
+					}
+				}
+			}
+			this.productService.save(savedProduct);
+		}
 		
-		String msg = isNew ? "Đã thêm sản phẩm mới thành công!" : "Đã cập nhật thông tin sản phẩm thành công!";
+		String msg = isNew ? "Đã thêm sản phẩm mới!" : "Đã cập nhật sản phẩm thành công!";
 		redirectAttributes.addFlashAttribute("successMessage", msg);
-		
 		return "redirect:/admin/products";
+	}
+
+	@PostMapping("/images/{imageId}/delete")
+	public String deleteImage(@PathVariable("imageId") Long imageId, 
+	                        @RequestParam("productId") Long productId,
+	                        RedirectAttributes redirectAttributes) {
+		Optional<Product> pOpt = this.productService.findById(productId);
+		if (pOpt.isPresent()) {
+			Product p = pOpt.get();
+			p.getImages().removeIf(img -> img.getId().equals(imageId));
+			this.productService.save(p);
+			redirectAttributes.addFlashAttribute("successMessage", "Đã xóa ảnh khỏi album.");
+		}
+		return "redirect:/admin/products/" + productId + "/edit";
 	}
 
 	@GetMapping("/{id}/edit")
@@ -143,7 +172,7 @@ public class AdminProductController {
 			redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
 		} catch (DataIntegrityViolationException ex) {
 			redirectAttributes.addFlashAttribute("errorMessage",
-					"Không thể xóa sản phẩm vì còn dữ liệu liên quan. Vui lòng thử lại sau.");
+					"Không thể xóa sản phẩm vì còn dữ liệu liên quan.");
 		}
 		return "redirect:/admin/products";
 	}

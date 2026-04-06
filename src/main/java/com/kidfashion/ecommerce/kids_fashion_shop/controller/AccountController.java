@@ -166,4 +166,20 @@ public class AccountController {
 		model.addAttribute("pageTitle", "Chi tiết đơn hàng");
 		return "shop/order-detail";
 	}
+
+	@PostMapping("/orders/{id}/return")
+	@PreAuthorize("hasAnyRole('CUSTOMER','ADMIN')")
+	public String orderReturnSubmit(@AuthenticationPrincipal ShopUserDetails principal, @PathVariable("id") Long id,
+			@RequestParam("returnReason") String reason, RedirectAttributes redirectAttributes) {
+		if (principal == null) {
+			return "redirect:/login";
+		}
+		try {
+			this.shopOrderService.requestReturn(id, principal.getAppUser().getId(), reason);
+			redirectAttributes.addFlashAttribute("returnSuccess", "Yêu cầu trả hàng đã được gửi thành công.");
+		} catch (Exception e) {
+			redirectAttributes.addFlashAttribute("returnError", "Không thể gửi yêu cầu trả hàng: " + e.getMessage());
+		}
+		return "redirect:/account/orders/" + id;
+	}
 }

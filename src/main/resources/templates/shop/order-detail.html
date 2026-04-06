@@ -60,6 +60,9 @@
         </table>
       </div>
 
+      <div th:if="${returnSuccess != null}" class="alert alert-success" th:text="${returnSuccess}" style="margin-top:16px"></div>
+      <div th:if="${returnError != null}" class="alert alert-error" th:text="${returnError}" style="margin-top:16px"></div>
+
       <div class="order-summary-boutique">
         <div class="summary-line">
           <span class="summary-label">Tạm tính:</span>
@@ -73,6 +76,32 @@
           <span class="summary-label">Tổng thanh toán:</span>
           <span class="summary-value" th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</span>
         </div>
+      </div>
+
+      <!-- Return Request Section -->
+      <div th:if="${order.status.name() == 'HOAN_THANH'}" class="return-request-section" style="margin-top: 32px; border-top: 1px solid var(--border); padding-top: 24px;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 12px;">Yêu cầu trả hàng / Hoàn tiền</h3>
+        <p class="muted" style="margin-bottom: 16px; font-size: 0.9rem;">Nếu sản phẩm có lỗi hoặc không như mô tả, bạn có thể gửi yêu cầu trả hàng trong vòng 7 ngày.</p>
+        <form th:action="@{/account/orders/{id}/return(id=${order.id})}" method="post">
+          <div class="boutique-field">
+            <label for="returnReason" class="field-label">Lý do trả hàng</label>
+            <div class="boutique-input-wrap">
+              <textarea id="returnReason" name="returnReason" rows="3" required 
+                        style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; font-family: var(--font); font-size: 0.95rem; background: var(--input-bg); color: var(--text); resize: none;"
+                        placeholder="Vui lòng cho biết lý do bạn muốn trả hàng..."></textarea>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-edit-luxury" style="width: 100%; height: 50px; font-weight: 700; margin-top: 12px; background: var(--accent); color: white;">Gửi yêu cầu trả hàng</button>
+        </form>
+      </div>
+
+      <div th:if="${order.status.name() == 'TRA_HANG'}" class="return-info-section" style="margin-top: 32px; border-top: 1px solid var(--border); padding-top: 24px;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 12px; color: var(--error);">Đã gửi yêu cầu trả hàng</h3>
+        <div class="boutique-field">
+          <span class="field-label">Lý do bạn đã gửi:</span>
+          <p class="order-info-value" th:text="${order.returnReason}">Lý do...</p>
+        </div>
+        <p class="muted" style="font-size: 0.9rem;">Yêu cầu của bạn đang được Admin xem xét. Chúng tôi sẽ liên hệ với bạn sớm nhất có thể.</p>
       </div>
     </div>
   </div>

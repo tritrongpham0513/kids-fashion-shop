@@ -45,15 +45,18 @@ public class CheckoutController {
 	private final ShopOrderService shopOrderService;
 	private final DiscountCodeService discountCodeService;
 	private final SePayService sePayService;
+	private final com.kidfashion.ecommerce.kids_fashion_shop.repository.AddressRepository addressRepository;
 
 	public CheckoutController(CartSessionService cartSessionService, ShopOrderService shopOrderService,
 			DiscountCodeService discountCodeService, CartPersistenceService cartPersistenceService,
-			SePayService sePayService) {
+			SePayService sePayService,
+			com.kidfashion.ecommerce.kids_fashion_shop.repository.AddressRepository addressRepository) {
 		this.cartSessionService = cartSessionService;
 		this.shopOrderService = shopOrderService;
 		this.discountCodeService = discountCodeService;
 		this.cartPersistenceService = cartPersistenceService;
 		this.sePayService = sePayService;
+		this.addressRepository = addressRepository;
 	}
 
 	@GetMapping("/checkout/payment/sepay")
@@ -137,8 +140,13 @@ public class CheckoutController {
 		model.addAttribute("cartSubtotalText", formatMoneyVnd(subtotal));
 		model.addAttribute("pageTitle", "Thanh toán");
 		String defaultAddress = "";
-		if (principal != null && principal.getAppUser() != null && principal.getAppUser().getAddress() != null) {
-			defaultAddress = principal.getAppUser().getAddress().trim();
+		if (principal != null && principal.getAppUser() != null) {
+			AppUser user = principal.getAppUser();
+			if (user.getAddress() != null) {
+				defaultAddress = user.getAddress().trim();
+			}
+			// Lấy danh sách địa chỉ đã lưu trong sổ địa chỉ
+			model.addAttribute("savedAddresses", this.addressRepository.findByUserId(user.getId()));
 		}
 		model.addAttribute("defaultAddress", defaultAddress);
 		model.addAttribute("hasDefaultAddress", !defaultAddress.isEmpty());

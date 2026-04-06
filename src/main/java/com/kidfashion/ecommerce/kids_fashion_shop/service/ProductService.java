@@ -137,7 +137,8 @@ public class ProductService {
 
 	@Transactional
 	public void decreaseStock(Long productId, int quantity) {
-		Optional<Product> opt = this.productRepository.findById(productId);
+		// Dùng findByIdForUpdate để Pessimistic Write Lock (khóa dòng này trong DB)
+		Optional<Product> opt = this.productRepository.findByIdForUpdate(productId);
 		if (opt.isEmpty()) {
 			return;
 		}
@@ -145,7 +146,7 @@ public class ProductService {
 		int current = p.getStockQuantity() == null ? 0 : p.getStockQuantity().intValue();
 		int next = current - quantity;
 		if (next < 0) {
-			next = 0;
+			next = 0; // Hoặc có thể throw exception tùy nghiệp vụ
 		}
 		p.setStockQuantity(Integer.valueOf(next));
 		this.productRepository.save(p);
@@ -155,24 +156,29 @@ public class ProductService {
 	public List<Product> findLegacyBestSellersByOrderVolume(int limit) {
 		PageRequest page = PageRequest.of(0, limit);
 		List<Object[]> rows = this.orderLineRepository.findProductIdsByTotalQuantitySold(page);
-		List<Product> result = new ArrayList<Product>();
-		if (rows != null && rows.size() > 0) {
-			Set<Long> seen = new HashSet<Long>();
-			for (int i = 0; i < rows.size(); i++) {
-				Object[] row = rows.get(i);
-				if (row != null && row.length > 0 && row[0] != null) {
-					Long pid = (Long) row[0];
-					if (!seen.contains(pid)) {
-						seen.add(pid);
-						Optional<Product> p = this.productRepository.findById(pid);
-						if (p.isPresent()) {
-							result.add(p.get());
-						}
-					}
-				}
-			}
+		if (rows == null || rows.isEmpty()) {
+			return new java.util.ArrayList<>();
 		}
-		return result;
+		java.util.List<Long> ids = rows.stream()
+				.filter(r -> r != null && r.length > 0 && r[0] != null)
+				.map(r -> (Long) r[0])
+				.toList();
+		java.util.List<Product> products = this.productRepository.findAllById(ids);
+		java.util.Map<Long, Product> productMap = products.stream()
+				.collect(java.util.stream.Collectors.toMap(Product::getId, p -> p));
+		return ids.stream()
+				.map(productMap::get)
+				.filter(java.util.Objects::nonNull)
+				.collect(java.util.stream.Collectors.toList());
+	}
+
+	public List<Product> findRelatedProducts(Product product, int limit) {
+		if (product == null || product.getCategory() == null) {
+			return findBestSellingForHome(limit);
+		}
+		PageRequest page = PageRequest.of(0, limit);
+		return this.productRepository.findByCategoryIdAndIdNotOrderByHotScoreDesc(
+				product.getCategory().getId(), product.getId(), page);
 	}
 
 	public long countTotalSold(Long productId) {

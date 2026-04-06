@@ -116,7 +116,7 @@ public class CatalogController {
 		model.addAttribute("soldCount", Long.valueOf(this.productService.countTotalSold(id)));
 
 		model.addAttribute("product", p.get());
-		model.addAttribute("bestSellingProducts", this.productService.findBestSellingForHome(8));
+		model.addAttribute("bestSellingProducts", this.productService.findRelatedProducts(p.get(), 4));
 		model.addAttribute("pageTitle", p.get().getName());
 		return "shop/product-detail";
 	}

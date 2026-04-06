@@ -30,9 +30,13 @@ public class AdminDashboardController {
 		long orders = this.shopOrderRepository.count();
 		long customers = this.appUserRepository.findByRoleOrderByFullNameAsc(
 				com.kidfashion.ecommerce.kids_fashion_shop.model.Role.CUSTOMER).size();
+		long returns = this.shopOrderRepository.findByStatus(
+				com.kidfashion.ecommerce.kids_fashion_shop.model.OrderStatus.TRA_HANG).size();
+
 		model.addAttribute("countProducts", Long.valueOf(products));
 		model.addAttribute("countOrders", Long.valueOf(orders));
 		model.addAttribute("countCustomers", Long.valueOf(customers));
+		model.addAttribute("countReturns", Long.valueOf(returns));
 		model.addAttribute("pageTitle", "Bảng điều khiển");
 		return "admin/dashboard";
 	}

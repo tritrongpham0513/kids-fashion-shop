@@ -23,11 +23,11 @@
           <td th:text="${o.id}">1</td>
           <td th:text="${o.customer.fullName}">Tên</td>
           <td th:text="${#temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm')}">N</td>
-           <td>
-             <span class="badge-status" 
-                   th:classappend="${o.status.name() == 'CHO_XAC_NHAN' ? 'badge-waiting' : (o.status.name() == 'DANG_GIAO' ? 'badge-shipping' : (o.status.name() == 'HOAN_THANH' ? 'badge-completed' : 'badge-cancelled'))}"
-                   th:text="${o.status.displayName}">S</span>
-           </td>
+            <td>
+              <span class="badge-status" 
+                    th:classappend="${o.status.name() == 'CHO_XAC_NHAN' ? 'badge-waiting' : (o.status.name() == 'DANG_XU_LY' ? 'badge-processing' : (o.status.name() == 'DANG_GIAO' ? 'badge-shipping' : (o.status.name() == 'HOAN_THANH' ? 'badge-completed' : (o.status.name() == 'TRA_HANG' ? 'badge-return' : 'badge-cancelled'))))}"
+                    th:text="${o.status.displayName}">S</span>
+            </td>
            <td th:text="${#numbers.formatDecimal(o.totalAmount, 0, 'POINT', 0, 'COMMA')} + ' đ'">0</td>
             <td>
               <div class="pill-row">

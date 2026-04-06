@@ -65,6 +65,9 @@ public class ShopOrder {
 	@Column(name = "sepay_transaction_id", length = 100)
 	private String sepayTransactionId;
 
+	@Column(name = "return_reason", length = 500)
+	private String returnReason;
+
 	@OneToMany(mappedBy = "shopOrder", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<OrderLine> lines = new ArrayList<OrderLine>();
 
@@ -182,5 +185,13 @@ public class ShopOrder {
 
 	public void setSepayTransactionId(String sepayTransactionId) {
 		this.sepayTransactionId = sepayTransactionId;
+	}
+
+	public String getReturnReason() {
+		return returnReason;
+	}
+
+	public void setReturnReason(String returnReason) {
+		this.returnReason = returnReason;
 	}
 }

@@ -14,6 +14,8 @@ public interface ShopOrderRepository extends JpaRepository<ShopOrder, Long> {
 
 	List<ShopOrder> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
 
+	List<ShopOrder> findByStatus(com.kidfashion.ecommerce.kids_fashion_shop.model.OrderStatus status);
+
 	@Query("select count(o) from ShopOrder o where o.createdAt >= :from and o.createdAt < :to")
 	long countOrdersBetween(LocalDateTime from, LocalDateTime to);
 

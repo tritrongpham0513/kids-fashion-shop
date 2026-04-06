@@ -39,16 +39,37 @@
         <h3 class="checkout-section-title checkout-section-title--spaced">Địa chỉ giao hàng</h3>
         <div class="boutique-field">
           <span class="field-label">Chọn địa chỉ nhận hàng</span>
-          <label class="boutique-radio-label">
-            <input type="radio" name="addressOptionVisual" value="default" checked th:disabled="${!hasDefaultAddress}"/>
-            Dùng địa chỉ mặc định trong hồ sơ
+          
+          <!-- Default Profile Address -->
+          <label class="boutique-radio-label" th:if="${hasDefaultAddress}">
+            <input type="radio" name="addressOptionVisual" value="default" checked data-address-text="default-profile"/>
+            <span class="radio-custom-text">Dùng địa chỉ mặc định trong hồ sơ</span>
           </label>
-          <p th:if="${hasDefaultAddress}" class="muted checkout-address-note" th:text="${defaultAddress}">Địa chỉ mặc định</p>
-          <p th:if="${!hasDefaultAddress}" class="alert alert-error checkout-address-alert">
-            Bạn chưa có địa chỉ mặc định, vui lòng nhập địa chỉ mới bên dưới.
+          <p th:if="${hasDefaultAddress}" class="muted checkout-address-note" th:text="${defaultAddress}" id="default-profile-text">Địa chỉ mặc định</p>
+          
+          <!-- Saved Addresses from Address Book -->
+          <th:block th:if="${savedAddresses != null and !savedAddresses.isEmpty()}">
+            <div class="saved-addresses-scroll">
+              <th:block th:each="addr : ${savedAddresses}">
+                <label class="boutique-radio-label saved-addr-item">
+                  <input type="radio" name="addressOptionVisual" th:value="'saved-' + ${addr.id}" 
+                         th:data-address-text="${addr.addressLine}"
+                         th:checked="${!hasDefaultAddress and addrStat.first}"/>
+                  <div class="radio-content">
+                    <strong th:text="${addr.label != null ? addr.label : 'Địa chỉ đã lưu'}">Nhà riêng</strong>
+                    <span class="addr-text" th:text="${addr.addressLine}">Địa chỉ...</span>
+                  </div>
+                </label>
+              </th:block>
+            </div>
+          </th:block>
+
+          <p th:if="${!hasDefaultAddress and (savedAddresses == null or savedAddresses.isEmpty())}" class="alert alert-error checkout-address-alert">
+            Bạn chưa có địa chỉ lưu sẵn, vui lòng nhập địa chỉ mới bên dưới.
           </p>
+
           <label class="boutique-radio-label">
-            <input type="radio" name="addressOptionVisual" value="new" th:checked="${!hasDefaultAddress}"/>
+            <input type="radio" name="addressOptionVisual" value="new" th:checked="${!hasDefaultAddress and (savedAddresses == null or savedAddresses.isEmpty())}"/>
             Nhập địa chỉ giao hàng khác
           </label>
           <div class="boutique-input-wrap">
@@ -56,6 +77,43 @@
                       placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành..."></textarea>
           </div>
         </div>
+
+        <style>
+          .saved-addresses-scroll {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 8px;
+          }
+          .saved-addr-item {
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            padding: 12px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+          }
+          .saved-addr-item:hover { border-color: var(--accent); }
+          .saved-addr-item input:checked + .radio-content { color: var(--accent); }
+          .radio-content { display: flex; flex-direction: column; gap: 2px; }
+          .radio-content strong { font-size: 0.95rem; }
+          .radio-content .addr-text { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; }
+          
+          /* Custom styling for standard luxury radios */
+          .boutique-radio-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 12px;
+            cursor: pointer;
+          }
+        </style>
 
         <h3 class="checkout-section-title checkout-section-title--spaced">Hình thức thanh toán</h3>
         <div class="boutique-field">
@@ -224,8 +282,25 @@
     }
 
     function syncCheckoutFormData() {
-      if (addressOptionHidden) addressOptionHidden.value = selectedAddressOption();
-      if (addressHidden) addressHidden.value = addressInput ? (addressInput.value || '').trim() : '';
+      var opt = selectedAddressOption();
+      if (addressOptionHidden) addressOptionHidden.value = opt;
+      
+      var finalAddress = "";
+      if (opt === 'default') {
+        finalAddress = (document.getElementById('default-profile-text')?.textContent || "").trim();
+        if (addressInput) addressInput.parentElement.style.display = 'none';
+      } else if (opt && opt.startsWith('saved-')) {
+        // Tìm radio đang được check để lấy data-address-text
+        var activeRadio = document.querySelector('input[name="addressOptionVisual"]:checked');
+        finalAddress = activeRadio ? activeRadio.getAttribute('data-address-text') : "";
+        if (addressInput) addressInput.parentElement.style.display = 'none';
+      } else {
+        // Option 'new'
+        finalAddress = addressInput ? (addressInput.value || '').trim() : '';
+        if (addressInput) addressInput.parentElement.style.display = 'block';
+      }
+
+      if (addressHidden) addressHidden.value = finalAddress;
       if (discountHidden) discountHidden.value = input ? (input.value || '').trim() : '';
       if (paymentMethodHidden) paymentMethodHidden.value = selectedPaymentMethod();
     }

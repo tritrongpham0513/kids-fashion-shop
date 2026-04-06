@@ -1,6 +1,7 @@
 package com.kidfashion.ecommerce.kids_fashion_shop.controller.api;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -15,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kidfashion.ecommerce.kids_fashion_shop.model.PaymentTransaction;
 import com.kidfashion.ecommerce.kids_fashion_shop.model.ShopOrder;
+import com.kidfashion.ecommerce.kids_fashion_shop.repository.PaymentTransactionRepository;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.SePayService;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.ShopOrderService;
 
@@ -25,58 +28,57 @@ public class SePayWebhookController {
 
     private static final Logger log = LoggerFactory.getLogger(SePayWebhookController.class);
 
-    private final ShopOrderService shopOrderService;
     private final SePayService sePayService;
+    private final ShopOrderService shopOrderService;
+    private final PaymentTransactionRepository paymentTransactionRepository;
 
-    public SePayWebhookController(ShopOrderService shopOrderService, SePayService sePayService) {
-        this.shopOrderService = shopOrderService;
+    public SePayWebhookController(SePayService sePayService, ShopOrderService shopOrderService,
+                                  PaymentTransactionRepository paymentTransactionRepository) {
         this.sePayService = sePayService;
+        this.shopOrderService = shopOrderService;
+        this.paymentTransactionRepository = paymentTransactionRepository;
     }
 
     /**
-     * Webhook Endpoint cho SePay
-     * Tham khảo: https://docs.sepay.vn/tich-hop-webhook.html
+     * Endpoint nhận Webhook từ SePay
+     * URL cấu hình trên SePay: https://your-domain.render.com/api/sepay/webhook
      */
     @PostMapping("/webhook")
     public ResponseEntity<String> handleWebhook(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestHeader(value = "X-SePay-Token", required = false) String sePayToken,
             @RequestBody Map<String, Object> payload) {
         
         log.info("Nhận Webhook từ SePay: {}", payload);
 
         // 1. Xác thực Token
-        if (!this.sePayService.verifyWebhookToken(sePayToken)) {
-            log.warn("Webhook SePay bị từ chối do sai Token!");
+        String tokenToVerify = (authHeader != null) ? authHeader : sePayToken;
+        if (!this.sePayService.verifyWebhookToken(tokenToVerify)) {
+            log.warn("Webhook SePay bị từ chối do sai Token! (Auth: {}, X-Token: {})", authHeader, sePayToken);
             return ResponseEntity.status(401).body("Unauthorized");
         }
 
-        // 2. Lấy nội dung chuyển khoản và số tiền
-        String content = (String) payload.get("content"); // Ví dụ: "THANH TOAN DON HANG 123"
-        if (content == null) return ResponseEntity.ok("OK (No content)");
-
-        // 3. Tìm Mã đơn hàng trong nội dung (Regex)
-        Long orderId = extractOrderId(content);
-        if (orderId == null) {
-            log.warn("[SePay] Không tìm thấy mã đơn hàng trong nội dung: {}", content);
-            return ResponseEntity.ok("OK (No Order ID found)");
-        }
-
-        // 4. Cập nhật đơn hàng thông qua Service (Nguyên tử)
         try {
-            // Lấy số tiền khách đã chuyển từ SePay (transferAmount)
-            Object amountObj = payload.get("transferAmount");
-            BigDecimal transferAmount = BigDecimal.ZERO;
-            if (amountObj != null) {
-                transferAmount = new BigDecimal(String.valueOf(amountObj));
+            // 2. Trích xuất thông tin giao dịch
+            String content = (String) payload.get("content"); 
+            BigDecimal transferAmount = new BigDecimal(payload.get("transferAmount").toString());
+            String transactionId = String.valueOf(payload.get("id"));
+            String reference = payload.get("reference") != null ? String.valueOf(payload.get("reference")) : transactionId;
+
+            // 3. Tìm mã đơn hàng từ nội dung chuyển khoản
+            Long orderId = extractOrderId(content);
+            if (orderId == null) {
+                log.warn("[SePay] Không tìm thấy mã đơn hàng trong nội dung: {}", content);
+                return ResponseEntity.ok("OK (Order ID not found)");
             }
 
-            // Lấy thông tin đơn hàng để so sánh tiền
+            // 4. Lấy thông tin đơn hàng để so sánh tiền
             Optional<ShopOrder> orderOpt = this.shopOrderService.findById(orderId);
             if (orderOpt.isEmpty()) {
                 log.warn("[SePay] Không tìm thấy đơn hàng #{} trong hệ thống.", orderId);
                 return ResponseEntity.ok("OK (Order not found)");
             }
-            
+
             ShopOrder order = orderOpt.get();
             BigDecimal totalAmount = order.getTotalAmount();
 
@@ -87,16 +89,31 @@ public class SePayWebhookController {
             if (transferAmountRounded.compareTo(totalAmountRounded) < 0) {
                 log.warn("[SePay] Đơn hàng #{}: Khách chuyển THIẾU tiền! (Cần: {}, Chuyển: {})", 
                          orderId, totalAmountRounded, transferAmountRounded);
-                return ResponseEntity.ok("OK (Amount mismatch - too low)");
+                return ResponseEntity.ok("OK (Amount mismatch)");
             }
 
-            String transactionId = String.valueOf(payload.get("id"));
+            // 5. Cập nhật đơn hàng thành công
             this.shopOrderService.completePayment(orderId, transactionId, content);
-            log.info("[SePay] Xác nhận thành công đơn hàng #{}. (Số tiền: {}, Giao dịch: {})", 
-                     orderId, transferAmount, transactionId);
+            log.info("[SePay] Xác nhận thành công đơn hàng #{}. (Giao dịch: {})", orderId, transactionId);
+
+            // 6. Lưu Nhật ký giao dịch
+            try {
+                PaymentTransaction tx = new PaymentTransaction();
+                tx.setShopOrder(order);
+                tx.setAmount(transferAmount);
+                tx.setTransactionRef(reference);
+                tx.setPaymentMethod("SEPAY");
+                tx.setStatus("SUCCESS");
+                tx.setRawData(payload.toString());
+                tx.setCreatedAt(LocalDateTime.now());
+                this.paymentTransactionRepository.save(tx);
+                log.info("[SePay] Đã lưu nhật ký giao dịch: {}", reference);
+            } catch (Exception ex) {
+                log.error("[SePay] Lỗi lưu nhật ký giao dịch: {}", ex.getMessage());
+            }
 
         } catch (Exception e) {
-            log.error("[SePay] Lỗi nghiêm trọng khi đối soát đơn hàng #{}: {}", orderId, e.getMessage());
+            log.error("[SePay] Lỗi nghiêm trọng khi xử lý Webhook: {}", e.getMessage());
             return ResponseEntity.status(500).body("Internal Error");
         }
 
@@ -115,7 +132,7 @@ public class SePayWebhookController {
         Matcher m2 = p2.matcher(content);
         if (m2.find()) return Long.parseLong(m2.group(1));
 
-        // 3. Tìm số có từ 1-6 chữ số xuất hiện độc lập (Trường hợp khách chỉ ghi mỗi số đơn hàng)
+        // 3. Tìm số có từ 1-6 chữ số xuất hiện độc lập
         Pattern p3 = Pattern.compile("\\b(\\d{1,6})\\b");
         Matcher m3 = p3.matcher(content);
         while (m3.find()) {
@@ -123,7 +140,6 @@ public class SePayWebhookController {
                 return Long.parseLong(m3.group(1));
             } catch (Exception e) {}
         }
-
         return null;
     }
 }

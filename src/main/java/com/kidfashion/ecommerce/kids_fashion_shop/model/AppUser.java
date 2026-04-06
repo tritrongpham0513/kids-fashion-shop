@@ -1,9 +1,11 @@
 package com.kidfashion.ecommerce.kids_fashion_shop.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -42,6 +44,9 @@ public class AppUser {
 
 	@OneToMany(mappedBy = "customer")
 	private List<ShopOrder> orders = new ArrayList<ShopOrder>();
+
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	private List<Address> addresses = new ArrayList<>();
 
 	public AppUser() {
 		this.role = Role.CUSTOMER;
@@ -109,5 +114,13 @@ public class AppUser {
 
 	public void setOrders(List<ShopOrder> orders) {
 		this.orders = orders;
+	}
+
+	public List<Address> getAddresses() {
+		return addresses;
+	}
+
+	public void setAddresses(List<Address> addresses) {
+		this.addresses = addresses;
 	}
 }

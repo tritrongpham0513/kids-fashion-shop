@@ -2,7 +2,10 @@ package com.kidfashion.ecommerce.kids_fashion_shop.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -11,6 +14,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
 @Entity
@@ -79,6 +84,10 @@ public class Product {
 	/** Tổng số lượng sản phẩm đã bán */
 	@Column(name = "sold_count", nullable = false)
 	private Long soldCount = 0L;
+
+	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@OrderBy("sortOrder ASC")
+	private List<ProductImage> images = new ArrayList<>();
 
 	public Product() {
 		this.newArrival = Boolean.FALSE;
@@ -232,5 +241,13 @@ public class Product {
 
 	public void setSoldCount(Long soldCount) {
 		this.soldCount = soldCount == null ? 0L : soldCount;
+	}
+
+	public List<ProductImage> getImages() {
+		return images;
+	}
+
+	public void setImages(List<ProductImage> images) {
+		this.images = images;
 	}
 }

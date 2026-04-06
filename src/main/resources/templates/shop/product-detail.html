@@ -6,7 +6,11 @@
 <main class="section">
   <div class="container">
     <div class="breadcrumb">
-      <a th:href="@{/}">Trang chủ</a> <span>/</span> <a th:href="@{/categories/{id}(id=${product.category.id})}" th:text="${product.category.name}">Danh mục</a> <span>/</span> <span th:text="${product.name}">Sản phẩm</span>
+      <a th:href="@{/}">Trang chủ</a> 
+      <th:block th:if="${product.category != null}">
+        <span>/</span> <a th:href="@{/categories/{id}(id=${product.category.id})}" th:text="${product.category.name}">Danh mục</a> 
+      </th:block>
+      <span>/</span> <span th:text="${product.name}">Sản phẩm</span>
     </div>
 
     <div class="product-detail-layout">
@@ -61,8 +65,10 @@
       <!-- Cột Phải: Thông tin chi tiết -->
       <div class="product-info">
         <div class="breadcrumb" style="margin-bottom: 8px;">
-          <a th:href="@{/}">Trang chủ</a> <span>/</span> 
-          <a th:href="@{/categories/{id}(id=${product.category.id})}" th:text="${product.category.name}">Danh mục</a>
+          <a th:href="@{/}">Trang chủ</a> 
+          <th:block th:if="${product.category != null}">
+            <span>/</span> <a th:href="@{/categories/{id}(id=${product.category.id})}" th:text="${product.category.name}">Danh mục</a>
+          </th:block>
         </div>
         
         <h1 th:text="${product.name}" style="font-family: inherit; font-weight: 700; font-size: 2.4rem; margin-bottom: 12px;">Tên sản phẩm</h1>
