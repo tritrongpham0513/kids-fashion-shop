@@ -113,6 +113,7 @@ public class CatalogController {
 		}
 		model.addAttribute("reviewCount", Long.valueOf(reviewCount));
 		model.addAttribute("reviewAvg", Double.valueOf(reviewAvg));
+		model.addAttribute("soldCount", Long.valueOf(this.productService.countTotalSold(id)));
 
 		model.addAttribute("product", p.get());
 		model.addAttribute("bestSellingProducts", this.productService.findBestSellingForHome(8));

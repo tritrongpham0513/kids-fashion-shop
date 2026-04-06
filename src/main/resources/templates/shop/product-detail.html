@@ -65,7 +65,18 @@
           <a th:href="@{/categories/{id}(id=${product.category.id})}" th:text="${product.category.name}">Danh mục</a>
         </div>
         
-        <h1 th:text="${product.name}" style="font-family: inherit; font-weight: 700; font-size: 2.4rem;">Tên sản phẩm</h1>
+        <h1 th:text="${product.name}" style="font-family: inherit; font-weight: 700; font-size: 2.4rem; margin-bottom: 12px;">Tên sản phẩm</h1>
+        
+        <div class="product-meta" style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px; font-size: 0.95rem;">
+          <div th:if="${reviewCount > 0}" style="display: flex; align-items: center; gap: 4px; color: #fbbf24; padding-right: 12px; border-right: 1px solid var(--border);">
+            <strong th:text="${#numbers.formatDecimal(reviewAvg, 1, 1)}">4.5</strong>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-top: -2px;"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            <span class="muted" style="color: var(--muted); font-weight: 400; margin-left: 2px;" th:text="'(' + ${reviewCount} + ')'"></span>
+          </div>
+          <div class="sold-count" style="color: var(--muted);">
+            Đã bán <strong style="color: var(--foreground); font-weight: 600;" th:text="${soldCount}">0</strong>
+          </div>
+        </div>
         
         <div class="product-price">
           <span class="current-price" th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</span>

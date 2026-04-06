@@ -174,4 +174,8 @@ public class ProductService {
 		}
 		return result;
 	}
+
+	public long countTotalSold(Long productId) {
+		return this.orderLineRepository.sumQuantityByProductId(productId);
+	}
 }

@@ -33,5 +33,4 @@ build/
 .vscode/
 
 
-# Ẩn file secret đăng nhập Google OAuth2 (local)
 secrets/google-oauth.properties
