@@ -65,18 +65,28 @@
 
       <div style="display: flex; justify-content: flex-end; margin-top: 32px;">
         <form th:action="@{'/admin/orders/' + ${order.id} + '/status'}" method="post" 
-              class="pill-row" style="background: var(--bg-secondary); padding: 20px 32px; border-radius: 24px; align-items: center; gap: 20px;">
+              class="order-update-form" style="background: var(--bg-secondary); padding: 24px 32px; border-radius: 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 24px; border: 1px solid var(--border);">
           <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
           
           <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="font-weight: 800; font-size: 0.8rem; letter-spacing: 0.05em; color: var(--muted); text-transform: uppercase;">Trạng thái:</span>
-            <select name="status" style="border-radius: 12px; padding: 12px 40px 12px 16px; border: 1.5px solid var(--border); background: var(--bg); font-family: var(--font); font-weight: 600; cursor: pointer;">
+            <span style="font-weight: 800; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--muted); text-transform: uppercase;">Thanh toán ( <span th:text="${order.paymentMethod}"></span> ):</span>
+            <select name="paymentStatus" style="border-radius: 12px; padding: 10px 16px; border: 1.5px solid var(--border); background: var(--bg); font-family: var(--font); font-weight: 600; cursor: pointer;">
+              <option value="UNPAID" th:selected="${order.paymentStatus == 'UNPAID'}">Chưa thanh toán</option>
+              <option value="PAID" th:selected="${order.paymentStatus == 'PAID'}">Đã thanh toán</option>
+              <option value="PENDING" th:selected="${order.paymentStatus == 'PENDING'}">Đang chờ</option>
+              <option value="COD" th:selected="${order.paymentStatus == 'COD'}">COD (Thanh toán khi nhận)</option>
+            </select>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-weight: 800; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--muted); text-transform: uppercase;">Trạng thái đơn:</span>
+            <select name="status" style="border-radius: 12px; padding: 10px 16px; border: 1.5px solid var(--border); background: var(--bg); font-family: var(--font); font-weight: 600; cursor: pointer;">
               <option th:each="s : ${statuses}" th:value="${s.name()}" th:text="${s.displayName}"
                       th:selected="${s == order.status}"></option>
             </select>
           </div>
           
-          <button type="submit" class="btn btn-primary" style="height: 48px; min-width: 160px;">Lưu trạng thái</button>
+          <button type="submit" class="btn btn-primary" style="height: 48px; min-width: 150px; font-weight: 700;">Cập nhật đơn hàng</button>
         </form>
       </div>
     </div>

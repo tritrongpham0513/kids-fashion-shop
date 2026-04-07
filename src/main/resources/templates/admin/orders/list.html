@@ -16,7 +16,7 @@
     <div class="table-wrap">
       <table class="data-table">
         <thead>
-        <tr><th>Mã</th><th>Khách</th><th>Ngày</th><th>Trạng thái</th><th>Tổng</th><th>Thao tác</th></tr>
+        <tr><th>Mã</th><th>Khách</th><th>Ngày</th><th>Trạng thái</th><th>Thanh toán</th><th>Tổng</th><th>Thao tác</th></tr>
         </thead>
         <tbody>
         <tr th:each="o : ${orders}">
@@ -27,6 +27,11 @@
               <span class="badge-status" 
                     th:classappend="${o.status.name() == 'CHO_XAC_NHAN' ? 'badge-waiting' : (o.status.name() == 'DANG_XU_LY' ? 'badge-processing' : (o.status.name() == 'DANG_GIAO' ? 'badge-shipping' : (o.status.name() == 'HOAN_THANH' ? 'badge-completed' : (o.status.name() == 'TRA_HANG' ? 'badge-return' : 'badge-cancelled'))))}"
                     th:text="${o.status.displayName}">S</span>
+            </td>
+            <td>
+              <span class="badge-status" 
+                    th:classappend="${o.paymentStatus == 'PAID' ? 'badge-completed' : (o.paymentStatus == 'PENDING' ? 'badge-waiting' : 'badge-cancelled')}"
+                    th:text="${o.paymentStatus == 'PAID' ? 'Đã thanh toán' : (o.paymentStatus == 'PENDING' ? 'Đang chờ' : (o.paymentStatus == 'COD' ? 'COD' : 'Chưa thanh toán'))}">-</span>
             </td>
            <td th:text="${#numbers.formatDecimal(o.totalAmount, 0, 'POINT', 0, 'COMMA')} + ' đ'">0</td>
             <td>

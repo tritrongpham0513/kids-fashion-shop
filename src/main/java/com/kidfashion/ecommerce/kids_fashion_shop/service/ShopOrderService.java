@@ -199,6 +199,15 @@ public class ShopOrderService {
 	}
 
 	@Transactional
+	public void updatePaymentStatus(Long orderId, String newPaymentStatus) {
+		Optional<ShopOrder> opt = this.shopOrderRepository.findById(orderId);
+		if (opt.isEmpty()) return;
+		ShopOrder o = opt.get();
+		o.setPaymentStatus(newPaymentStatus);
+		this.shopOrderRepository.save(o);
+	}
+
+	@Transactional
 	public void completePayment(Long orderId, String transactionId, String transferContent) {
 		Optional<ShopOrder> opt = this.shopOrderRepository.findById(orderId);
 		if (opt.isPresent()) {

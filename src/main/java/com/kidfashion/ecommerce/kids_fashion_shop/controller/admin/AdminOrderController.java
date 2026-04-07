@@ -48,9 +48,15 @@ public class AdminOrderController {
 	}
 
 	@PostMapping("/{id}/status")
-	public String updateStatus(@PathVariable("id") Long id, @RequestParam("status") OrderStatus status, RedirectAttributes redirectAttributes) {
+	public String updateStatus(@PathVariable("id") Long id, 
+			@RequestParam("status") OrderStatus status, 
+			@RequestParam(value = "paymentStatus", required = false) String paymentStatus,
+			RedirectAttributes redirectAttributes) {
 		this.shopOrderService.updateStatus(id, status);
-		redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật trạng thái đơn hàng thành công!");
+		if (paymentStatus != null) {
+			this.shopOrderService.updatePaymentStatus(id, paymentStatus);
+		}
+		redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật đơn hàng thành công!");
 		return "redirect:/admin/orders/" + id;
 	}
 }
