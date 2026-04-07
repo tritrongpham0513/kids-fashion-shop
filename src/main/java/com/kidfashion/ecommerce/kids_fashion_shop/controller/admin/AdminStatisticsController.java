@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+// Trung tâm thống kê doanh thu và phân tích đơn hàng
 @Controller
 @RequestMapping("/admin/statistics")
 public class AdminStatisticsController {

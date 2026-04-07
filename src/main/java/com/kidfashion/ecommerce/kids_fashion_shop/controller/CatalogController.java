@@ -40,6 +40,7 @@ public class CatalogController {
 		return "shop/categories";
 	}
 
+	// Xem danh sách quần áo trẻ em theo loại danh mục
 	@GetMapping("/categories/{id}")
 	public String categoryProducts(@PathVariable("id") Long id,
 			@RequestParam(defaultValue = "1") int page, Model model) {
@@ -58,6 +59,7 @@ public class CatalogController {
 	}
 
 
+	// Hiển thị danh sách quần áo bán chạy nhất (HOT)
 	@GetMapping("/products/hot")
 	public String hotProducts(@RequestParam(defaultValue = "1") int page, Model model) {
 		Page<Product> productPage = this.productService.findBestSellingPaged(page - 1, 10);
@@ -69,6 +71,7 @@ public class CatalogController {
 		return "shop/products";
 	}
 
+	// Hiển thị danh sách quần áo mới nhập
 	@GetMapping("/products/new")
 	public String newProducts(@RequestParam(defaultValue = "1") int page, Model model) {
 		Page<Product> productPage = this.productService.findNewArrivalsPaged(page - 1, 10);
@@ -91,6 +94,7 @@ public class CatalogController {
 		return "shop/products";
 	}
 
+	// Xem thông tin chi tiết của một mặt hàng cụ thể
 	@GetMapping("/products/{id}")
 	public String productDetail(@PathVariable("id") Long id, 
 			@RequestParam(name = "src", required = false) String src, 
@@ -129,6 +133,7 @@ public class CatalogController {
 		return "shop/product-detail";
 	}
 
+	// Tìm kiếm mặt hàng theo tên sản phẩm
 	@GetMapping("/search")
 	public String search(@RequestParam(name = "q", required = false) String q,
 			@RequestParam(defaultValue = "1") int page, Model model) {

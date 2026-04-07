@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.kidfashion.ecommerce.kids_fashion_shop.model.DiscountCode;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.DiscountCodeService;
 
+// Quản lý mã giảm giá và các chương trình khuyến mãi
 @Controller
 @RequestMapping("/admin/discounts")
 public class AdminDiscountController {

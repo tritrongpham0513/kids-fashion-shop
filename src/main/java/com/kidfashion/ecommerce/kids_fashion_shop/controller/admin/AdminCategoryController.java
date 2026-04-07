@@ -21,6 +21,7 @@ import com.kidfashion.ecommerce.kids_fashion_shop.service.CategoryService;
 
 import jakarta.validation.Valid;
 
+// Quản lý danh mục quần áo trẻ em (Thêm/Xóa/Sửa)
 @Controller
 @RequestMapping("/admin/categories")
 public class AdminCategoryController {

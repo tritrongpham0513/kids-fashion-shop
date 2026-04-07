@@ -16,6 +16,7 @@ import com.kidfashion.ecommerce.kids_fashion_shop.model.OrderStatus;
 import com.kidfashion.ecommerce.kids_fashion_shop.model.ShopOrder;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.ShopOrderService;
 
+// Quản lý danh sách đơn hàng và trạng thái giao hàng
 @Controller
 @RequestMapping("/admin/orders")
 public class AdminOrderController {

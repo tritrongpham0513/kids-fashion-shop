@@ -22,6 +22,7 @@ import com.kidfashion.ecommerce.kids_fashion_shop.repository.PaymentTransactionR
 import com.kidfashion.ecommerce.kids_fashion_shop.service.SePayService;
 import com.kidfashion.ecommerce.kids_fashion_shop.service.ShopOrderService;
 
+// Tự động đối soát và xác nhận thanh toán qua ngân hàng
 @RestController
 @RequestMapping("/api/sepay")
 public class SePayWebhookController {

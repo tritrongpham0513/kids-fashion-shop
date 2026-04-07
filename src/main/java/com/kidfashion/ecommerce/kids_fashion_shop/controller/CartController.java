@@ -21,6 +21,7 @@ import com.kidfashion.ecommerce.kids_fashion_shop.service.CartSessionService;
 
 import jakarta.servlet.http.HttpSession;
 
+// Xử lý giỏ hàng, thêm sản phẩm và cập nhật số lượng
 @Controller
 public class CartController {
 
