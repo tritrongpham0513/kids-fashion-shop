@@ -114,8 +114,11 @@
             .then(res => res.json())
             .then(data => {
                 if (data.status && data.status !== 'CHO_THANH_TOAN') {
-                    // Status changed! Refresh to show success state
-                    window.location.reload();
+                    // Status changed! Show toast then refresh
+                    showSuccessToast();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
                 } else {
                     // Still pending, check again in 3s
                     setTimeout(checkStatus, 3000);
@@ -126,12 +129,91 @@
                 setTimeout(checkStatus, 10000); // Retry after 10s if error
             });
     };
+
+    function showSuccessToast() {
+        const toast = document.createElement('div');
+        toast.className = 'payment-toast-success';
+        toast.innerHTML = `
+            <div class="toast-content">
+                <div class="toast-icon">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <div class="toast-text">
+                    <strong>Thanh toán thành công!</strong>
+                    <span>Hệ thống đang chuyển hướng...</span>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        
+        // Simple confetti effect
+        for(let i=0; i<30; i++) {
+            createConfetti();
+        }
+    }
+
+    function createConfetti() {
+        const c = document.createElement('div');
+        c.className = 'confetti-piece';
+        c.style.left = Math.random() * 100 + 'vw';
+        c.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        c.style.backgroundColor = ['#ff8fab', '#10b981', '#3b82f6', '#f59e0b'][Math.floor(Math.random()*4)];
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 5000);
+    }
     
     // Start polling if still pending
     if (document.querySelector('.payment-main-grid')) {
         setTimeout(checkStatus, 3000);
     }
 </script>
+
+<style>
+    /* Toast Styles */
+    .payment-toast-success {
+        position: fixed;
+        top: 30px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        background: #10b981;
+        color: white;
+        padding: 16px 24px;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+        z-index: 9999;
+        animation: toastSlideIn 0.5s forwards cubic-bezier(0.17, 0.67, 0.83, 0.67);
+    }
+    @keyframes toastSlideIn {
+        to { transform: translateX(-50%) translateY(0); }
+    }
+    .toast-content { display: flex; align-items: center; gap: 16px; }
+    .toast-icon {
+        background: rgba(255,255,255,0.2);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .toast-text { display: flex; flex-direction: column; }
+    .toast-text strong { font-size: 1.1rem; }
+    .toast-text span { font-size: 0.85rem; opacity: 0.9; }
+
+    /* Confetti Styles */
+    .confetti-piece {
+        position: fixed;
+        top: -10px;
+        width: 10px;
+        height: 10px;
+        z-index: 9998;
+        border-radius: 2px;
+        animation: fall linear forwards;
+    }
+    @keyframes fall {
+        to { transform: translateY(110vh) rotate(720deg); }
+    }
+</style>
 
 <style>
     .sepay-payment-page { padding: 40px 0; }
