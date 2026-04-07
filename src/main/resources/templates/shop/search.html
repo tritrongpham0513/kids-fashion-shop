@@ -12,9 +12,9 @@
     </div>
     <div class="grid-products" th:if="${not #lists.isEmpty(products)}">
       <article class="card-product" th:each="p : ${products}">
-        <a class="card-product-img-wrap" th:href="@{/products/{id}(id=${p.id})}"><img th:src="${p.imageUrl}" th:alt="${p.name}"/></a>
+        <a class="card-product-img-wrap" th:href="@{/products/{id}(id=${p.id}, src='search')}"><img th:src="${p.imageUrl}" th:alt="${p.name}"/></a>
         <div class="card-body">
-          <a th:href="@{/products/{id}(id=${p.id})}"><strong th:text="${p.name}">Tên</strong></a>
+          <a th:href="@{/products/{id}(id=${p.id}, src='search')}"><strong th:text="${p.name}">Tên</strong></a>
           <div class="price"
                th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA')} + ' đ'">0 đ</div>
           <div class="sold-count-mini" th:if="${p.soldCount != null && p.soldCount > 0}" 

@@ -92,10 +92,18 @@ public class CatalogController {
 	}
 
 	@GetMapping("/products/{id}")
-	public String productDetail(@PathVariable("id") Long id, Model model) {
+	public String productDetail(@PathVariable("id") Long id, 
+			@RequestParam(name = "src", required = false) String src, 
+			Model model) {
 		Optional<Product> p = this.productService.findById(id);
 		if (p.isEmpty()) {
 			return "redirect:/";
+		}
+
+		// Track engagement
+		this.productService.incrementViewCount(id);
+		if ("search".equals(src)) {
+			this.productService.incrementSearchClickCount(id);
 		}
 
 		List<ProductReview> reviews = this.productReviewRepository.findByProductIdOrderByCreatedAtDesc(id);
@@ -126,6 +134,13 @@ public class CatalogController {
 			@RequestParam(defaultValue = "1") int page, Model model) {
 		Page<Product> productPage = this.productService.searchByNamePaged(q, page - 1, 10);
 		List<Product> content = productPage.getContent();
+		
+		// Track impressions
+		if (content != null && !content.isEmpty()) {
+			List<Long> ids = content.stream().map(Product::getId).toList();
+			this.productService.incrementSearchImpressionCount(ids);
+		}
+
 		model.addAttribute("keyword", q);
 		model.addAttribute("products", content);
 		model.addAttribute("currentPage", page);

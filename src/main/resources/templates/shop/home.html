@@ -154,7 +154,7 @@
       <div class="grid-products" th:if="${newestProducts != null}">
         <article class="card-product" th:each="p : ${newestProducts}" th:if="${p != null}">
           <div class="card-product-img-wrap">
-            <span class="tag-overlay">Mới</span>
+            <span class="tag-overlay" th:if="${p.newArrival}">Mới</span>
             <a th:if="${p.id != null}" th:href="@{/products/{id}(id=${p.id})}" style="display:block; width:100%; height:100%;">
               <img th:if="${p.imageUrl != null}" th:src="${p.imageUrl}" th:alt="${p.name}"/>
             </a>
@@ -188,7 +188,7 @@
       <div class="grid-products" th:if="${bestSellingProducts != null}">
         <article class="card-product" th:each="p : ${bestSellingProducts}" th:if="${p != null}">
           <div class="card-product-img-wrap">
-            <span class="tag-overlay hot">Hot</span>
+            <span class="tag-overlay hot" th:if="${p.adminHot or (p.hotScore != null and p.hotScore > 3.0)}">Hot</span>
             <a th:if="${p.id != null}" th:href="@{/products/{id}(id=${p.id})}" style="display:block; width:100%; height:100%;">
               <img th:if="${p.imageUrl != null}" th:src="${p.imageUrl}" th:alt="${p.name}"/>
             </a>

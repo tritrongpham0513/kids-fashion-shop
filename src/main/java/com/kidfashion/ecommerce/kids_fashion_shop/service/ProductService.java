@@ -8,10 +8,12 @@ import com.kidfashion.ecommerce.kids_fashion_shop.repository.ProductReviewReposi
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -183,5 +185,39 @@ public class ProductService {
 
 	public long countTotalSold(Long productId) {
 		return this.orderLineRepository.sumQuantityByProductId(productId);
+	}
+
+	@Async
+	@Transactional
+	public void incrementViewCount(Long productId) {
+		if (productId == null) return;
+		this.productRepository.findById(productId).ifPresent(p -> {
+			long current = p.getViewCount() == null ? 0L : p.getViewCount().longValue();
+			p.setViewCount(Long.valueOf(current + 1));
+			this.productRepository.save(p);
+		});
+	}
+
+	@Async
+	@Transactional
+	public void incrementSearchImpressionCount(Collection<Long> productIds) {
+		if (productIds == null || productIds.isEmpty()) return;
+		List<Product> products = this.productRepository.findAllById(productIds);
+		for (Product p : products) {
+			long current = p.getSearchImpressionCount() == null ? 0L : p.getSearchImpressionCount().longValue();
+			p.setSearchImpressionCount(Long.valueOf(current + 1));
+		}
+		this.productRepository.saveAll(products);
+	}
+
+	@Async
+	@Transactional
+	public void incrementSearchClickCount(Long productId) {
+		if (productId == null) return;
+		this.productRepository.findById(productId).ifPresent(p -> {
+			long current = p.getSearchClickCount() == null ? 0L : p.getSearchClickCount().longValue();
+			p.setSearchClickCount(Long.valueOf(current + 1));
+			this.productRepository.save(p);
+		});
 	}
 }

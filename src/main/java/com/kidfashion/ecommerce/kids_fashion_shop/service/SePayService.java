@@ -45,10 +45,14 @@ public class SePayService {
         if (webhookToken == null || webhookToken.isEmpty()) return true; // Nếu không cài token thì bỏ qua check
         if (tokenFromHeader == null) return false;
         
-        // Loại bỏ tiền tố "Bearer " nếu có (thường dùng cho kiểu API Key)
+        // Loại bỏ tiền tố "Bearer " hoặc "Apikey " nếu có
         String finalToken = tokenFromHeader.trim();
-        if (finalToken.startsWith("Bearer ")) {
-            finalToken = finalToken.substring(7);
+        String lowerToken = finalToken.toLowerCase();
+        
+        if (lowerToken.startsWith("bearer ")) {
+            finalToken = finalToken.substring(7).trim();
+        } else if (lowerToken.startsWith("apikey ")) {
+            finalToken = finalToken.substring(7).trim();
         }
         
         return webhookToken.trim().equals(finalToken);

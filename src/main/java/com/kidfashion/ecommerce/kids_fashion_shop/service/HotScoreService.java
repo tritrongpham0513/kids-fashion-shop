@@ -14,9 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class HotScoreService {
-
 	private static final double W_SALES = 0.5d;
-	private static final double W_REVIEW = 0.5d;
+	private static final double W_REVIEW = 0.2d;
+	private static final double W_VIEWS = 0.1d;
+	private static final double W_SEARCH_CLICKS = 0.2d;
+
 	/** Điểm cộng khi admin bật “Sản phẩm HOT” — vượt xa điểm organic */
 	private static final double BOOST_ADMIN_HOT = 1000.0d;
 
@@ -45,17 +47,26 @@ public class HotScoreService {
 		if (agg != null && agg.length >= 2 && agg[1] != null) {
 			avgRating = ((Number) agg[1]).doubleValue();
 		}
-		return computeScoreCustom(p, salesQty, revCount, avgRating);
+		
+		long views = p.getViewCount() == null ? 0L : p.getViewCount();
+		long searchClicks = p.getSearchClickCount() == null ? 0L : p.getSearchClickCount();
+		
+		return computeScoreCustom(p, salesQty, revCount, avgRating, views, searchClicks);
 	}
 
-	private double computeScoreCustom(Product p, long salesQty, long revCount, double avgRating) {
+	private double computeScoreCustom(Product p, long salesQty, long revCount, double avgRating, long views, long searchClicks) {
 		double salesPart = W_SALES * Math.log1p(salesQty);
 		double revPart = 0.0d;
 		if (revCount > 0 && avgRating > 0) {
 			revPart = W_REVIEW * (avgRating / 5.0d) * Math.log1p(revCount);
 		}
+		
+		double viewsPart = W_VIEWS * Math.log1p(views);
+		double searchClicksPart = W_SEARCH_CLICKS * Math.log1p(searchClicks);
+		
 		double adminBoost = Boolean.TRUE.equals(p.getAdminHot()) ? BOOST_ADMIN_HOT : 0.0d;
-		return salesPart + revPart + adminBoost;
+		
+		return salesPart + revPart + viewsPart + searchClicksPart + adminBoost;
 	}
 
 	@Transactional
@@ -88,7 +99,11 @@ public class HotScoreService {
 				rc = ((Number) rev[0]).longValue();
 				ra = ((Number) rev[1]).doubleValue();
 			}
-			p.setHotScore(Double.valueOf(computeScoreCustom(p, sq, rc, ra)));
+			
+			long v = p.getViewCount() == null ? 0L : p.getViewCount();
+			long sc = p.getSearchClickCount() == null ? 0L : p.getSearchClickCount();
+			
+			p.setHotScore(Double.valueOf(computeScoreCustom(p, sq, rc, ra, v, sc)));
 		}
 		this.productRepository.saveAll(products);
 	}

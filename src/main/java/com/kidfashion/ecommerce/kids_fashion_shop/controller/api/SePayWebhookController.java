@@ -52,9 +52,20 @@ public class SePayWebhookController {
         log.info("Nhận Webhook từ SePay: {}", payload);
 
         // 1. Xác thực Token
-        String tokenToVerify = (authHeader != null) ? authHeader : sePayToken;
+        String usedHeader = "None";
+        String tokenToVerify = null;
+        if (authHeader != null) {
+            tokenToVerify = authHeader;
+            usedHeader = "Authorization";
+        } else if (sePayToken != null) {
+            tokenToVerify = sePayToken;
+            usedHeader = "X-SePay-Token";
+        }
+
         if (!this.sePayService.verifyWebhookToken(tokenToVerify)) {
-            log.warn("Webhook SePay bị từ chối do sai Token! (Auth: {}, X-Token: {})", authHeader, sePayToken);
+            int len = (tokenToVerify != null) ? tokenToVerify.length() : 0;
+            log.warn("Webhook SePay bị từ chối (401)! Header: {}, Length: {}, Payload ID: {}", 
+                     usedHeader, len, payload.get("id"));
             return ResponseEntity.status(401).body("Unauthorized");
         }
 
